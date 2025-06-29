@@ -1,5 +1,5 @@
 import { env } from '@/env';
-import { authMiddleware } from '@repo/auth/middleware';
+import { createAuthMiddleware } from '@repo/auth/middleware';
 import { internationalizationMiddleware } from '@repo/internationalization/middleware';
 import { parseError } from '@repo/observability/error';
 import { secure } from '@repo/security';
@@ -24,14 +24,24 @@ const securityHeaders = env.FLAGS_SECRET
   ? noseconeMiddleware(noseconeOptionsWithToolbar)
   : noseconeMiddleware(noseconeOptions);
 
-const middleware = authMiddleware(async (_auth, request) => {
-  const i18nResponse = internationalizationMiddleware(
-    request as unknown as NextRequest
-  );
+// Create the auth middleware instance
+const authMiddleware = createAuthMiddleware();
+
+const middleware: NextMiddleware = async (request: NextRequest) => {
+  // First, run internationalization middleware
+  const i18nResponse = internationalizationMiddleware(request);
   if (i18nResponse) {
     return i18nResponse;
   }
 
+  // Then, run auth middleware
+  const authResponse = await authMiddleware(request);
+  // If auth middleware returns a redirect (not authenticated), return it
+  if (authResponse.status === 307 || authResponse.status === 302) {
+    return authResponse;
+  }
+
+  // Finally, apply security middleware
   if (!env.ARCJET_KEY) {
     return securityHeaders();
   }
@@ -53,6 +63,6 @@ const middleware = authMiddleware(async (_auth, request) => {
 
     return NextResponse.json({ error: message }, { status: 403 });
   }
-}) as unknown as NextMiddleware;
+};
 
 export default middleware;

@@ -1,23 +1,49 @@
 import type { NextRequest } from 'next/server';
 import { NextResponse } from 'next/server';
+import { auth } from './server';
 
-const isProtectedRoute = (request: NextRequest) => {
-  return request.url.startsWith('/dashboard'); // change this to your protected route
+/**
+ * Check if a route should be protected
+ */
+const isProtectedRoute = (pathname: string) => {
+  // Add your protected routes here
+  const protectedRoutes = ['/dashboard', '/profile', '/settings'];
+  return protectedRoutes.some(route => pathname.startsWith(route));
 };
 
-export const authMiddleware = async (request: NextRequest) => {
-  const url = new URL('/api/auth/get-session', request.nextUrl.origin);
-  const response = await fetch(url, {
-    headers: {
-      cookie: request.headers.get('cookie') || '',
-    },
-  });
+/**
+ * Better Auth middleware for Next.js
+ * This middleware checks session status for protected routes
+ */
+export const createAuthMiddleware = () => {
+  return async (request: NextRequest) => {
+    const pathname = request.nextUrl.pathname;
+    
+    // Skip auth check for non-protected routes
+    if (!isProtectedRoute(pathname)) {
+      return NextResponse.next();
+    }
 
-  const session = await response.json();
+    try {
+      // Get session from Better Auth
+      const session = await auth.api.getSession({
+        headers: request.headers,
+      });
 
-  if (isProtectedRoute(request) && !session) {
-    return NextResponse.redirect(new URL('/sign-in', request.url));
-  }
+      // If no session and trying to access protected route, redirect to sign-in
+      if (!session) {
+        const signInUrl = new URL('/sign-in', request.url);
+        signInUrl.searchParams.set('callbackUrl', pathname);
+        return NextResponse.redirect(signInUrl);
+      }
 
-  return NextResponse.next();
+      // Session exists, allow access
+      return NextResponse.next();
+    } catch (error) {
+      console.error('Auth middleware error:', error);
+      // On error, redirect to sign-in as a safety measure
+      const signInUrl = new URL('/sign-in', request.url);
+      return NextResponse.redirect(signInUrl);
+    }
+  };
 };
