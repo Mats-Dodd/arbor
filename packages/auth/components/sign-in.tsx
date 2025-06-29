@@ -26,7 +26,6 @@ export const SignIn = () => {
         password,
       });
       
-      // Redirect to app after successful sign-in
       const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
       router.push(appUrl);
     } catch (err) {
