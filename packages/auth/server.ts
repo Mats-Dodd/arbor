@@ -13,28 +13,17 @@ export const auth = betterAuth({
   secret: env.BETTER_AUTH_SECRET,
   emailAndPassword: {
     enabled: true,
-    autoSignIn: true, // Automatically sign in after sign up
-    requireEmailVerification: false, // Disable email verification for now
-  },
-  socialProviders: {
-    // Add your social providers here if needed
-    // github: {
-    //   clientId: env.GITHUB_CLIENT_ID!,
-    //   clientSecret: env.GITHUB_CLIENT_SECRET!,
-    // },
+    autoSignIn: true,
+    requireEmailVerification: false,
   },
   plugins: [
     nextCookies(),
-    // organization() // if you want to use organization plugin
   ],
-  // Important: Set your app's base URL
   baseURL: env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000',
-  // Session configuration
   session: {
-    expiresIn: 60 * 60 * 24 * 30, // 30 days
-    updateAge: 60 * 60 * 24, // 1 day
+    expiresIn: 60 * 60 * 24 * 30,
+    updateAge: 60 * 60 * 24,
   },
-  // Optional: Add trusted origins for CORS
   trustedOrigins: [
     env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'
   ],
