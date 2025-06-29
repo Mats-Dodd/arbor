@@ -1,6 +1,6 @@
 import { streamText } from '@repo/ai';
-import { log } from '@repo/observability/log';
 import { models } from '@repo/ai/lib/models';
+import { log } from '@repo/observability/log';
 
 export const POST = async (req: Request) => {
   const body = await req.json();

@@ -1,6 +1,7 @@
 import { auth } from '@repo/auth/server';
 import { database } from '@repo/database';
-import { notFound, redirect } from 'next/navigation';
+import { headers } from 'next/headers';
+import { redirect } from 'next/navigation';
 import { Header } from '../components/header';
 
 type SearchPageProperties = {
@@ -29,10 +30,11 @@ const SearchPage = async ({ searchParams }: SearchPageProperties) => {
       },
     },
   });
-  const { orgId } = await auth();
-
-  if (!orgId) {
-    notFound();
+  const session = await auth.api.getSession({
+    headers: await headers(),
+  });
+  if (!session?.user) {
+    return redirect('/sign-in');
   }
 
   if (!q) {

@@ -155,11 +155,6 @@ const data = {
   ],
   navSecondary: [
     {
-      title: 'Webhooks',
-      url: '/webhooks',
-      icon: AnchorIcon,
-    },
-    {
       title: 'Support',
       url: '#',
       icon: LifeBuoyIcon,

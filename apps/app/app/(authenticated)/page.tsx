@@ -11,8 +11,6 @@ export const metadata: Metadata = {
 };
 
 const App = async () => {
-
-
   return (
     <>
       <Header pages={['Building Your Application']} page="AI Chatbot" />
