@@ -1,5 +1,5 @@
 import type { Metadata } from 'next';
-import Editor from './components/editor';
+import Editor from './components/editor/editor';
 
 const title = 'Acme Inc';
 const description = 'My application.';
