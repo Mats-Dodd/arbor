@@ -9,25 +9,28 @@ import {
   undo, redo,
 } from 'loro-prosemirror'
 
+export const createLoroDoc = () => {
+  const doc = new LoroDoc()
+  console.log('[LORO.ts] Created new LoroDoc')
+  return doc
+}
 
-export const loroDoc = new LoroDoc()
-// loroDoc.setPeerId("0");
-// loroDoc.getText("text").insert(0, "Hello Loro 👋");
-console.log('[LORO.ts] loroDoc.toJSON()', loroDoc.toJSON())
-export const awareness = new CursorAwareness(loroDoc.peerIdStr)
-
-export const LoroExtension = Extension.create({
-  name: 'loro',
-  addProseMirrorPlugins() {
-    return [
-      LoroSyncPlugin({ doc: loroDoc as any }),      
-      LoroUndoPlugin({ doc: loroDoc as any }),
-      keymap({
-        'Mod-z': undo,
-        'Mod-y': redo,
-        'Mod-Shift-z': redo,
-      }),
-      LoroCursorPlugin(awareness, {}),
-    ]
-  },
-})
+export const createLoroExtension = (doc: LoroDoc) => {
+  const awareness = new CursorAwareness(doc.peerIdStr)
+  
+  return Extension.create({
+    name: 'loro',
+    addProseMirrorPlugins() {
+      return [
+        LoroSyncPlugin({ doc: doc as any }),      
+        LoroUndoPlugin({ doc: doc as any }),
+        keymap({
+          'Mod-z': undo,
+          'Mod-y': redo,
+          'Mod-Shift-z': redo,
+        }),
+        LoroCursorPlugin(awareness, {}),
+      ]
+    },
+  })
+}

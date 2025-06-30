@@ -5,7 +5,8 @@ import StarterKit from '@tiptap/starter-kit'
 import { useState, useEffect, useCallback, useRef } from 'react'
 import Link from 'next/link'
 import 'app/styles/editor.css'
-import { LoroExtension, loroDoc } from './loro'
+import { createLoroDoc, createLoroExtension } from './loro'
+import type { LoroDoc } from 'loro-crdt'
 
 interface EditorProps {
   nodeId?: string;
@@ -16,19 +17,23 @@ const Editor = ({ nodeId = 'doc-node-1' }: EditorProps) => {
   const [wordCount, setWordCount] = useState(0)
   const [isLoading, setIsLoading] = useState(true)
   const [isSaving, setIsSaving] = useState(false)
+  const [loroDoc, setLoroDoc] = useState<LoroDoc | null>(null)
   const saveTimeoutRef = useRef<NodeJS.Timeout | null>(null)
 
   // Load snapshot on mount
   useEffect(() => {
     const loadSnapshot = async () => {
       try {
+        // Create a new LoroDoc instance
+        const doc = createLoroDoc()
+        
         const response = await fetch(`/api/nodes/${nodeId}`)
         if (response.ok) {
           const node = await response.json()
           if (node.loroSnapshot) {
             // Convert base64 back to Uint8Array and import
             const snapshotBytes = Uint8Array.from(atob(node.loroSnapshot), c => c.charCodeAt(0))
-            loroDoc.import(snapshotBytes)
+            doc.import(snapshotBytes)
             console.log('[EDITOR] Loaded snapshot successfully')
           }
           if (node.name) {
@@ -38,6 +43,8 @@ const Editor = ({ nodeId = 'doc-node-1' }: EditorProps) => {
           // Node doesn't exist yet - create it
           await createNode()
         }
+        
+        setLoroDoc(doc)
       } catch (error) {
         console.error('[EDITOR] Failed to load snapshot:', error)
       } finally {
@@ -46,6 +53,11 @@ const Editor = ({ nodeId = 'doc-node-1' }: EditorProps) => {
     }
 
     loadSnapshot()
+    
+    // Cleanup function
+    return () => {
+      setLoroDoc(null)
+    }
   }, [nodeId])
 
   const createNode = async () => {
@@ -59,6 +71,8 @@ const Editor = ({ nodeId = 'doc-node-1' }: EditorProps) => {
   }
 
   const saveSnapshot = useCallback(async () => {
+    if (!loroDoc) return
+    
     try {
       setIsSaving(true)
       const snapshot = loroDoc.export({ mode: "snapshot" })
@@ -77,7 +91,7 @@ const Editor = ({ nodeId = 'doc-node-1' }: EditorProps) => {
     } finally {
       setIsSaving(false)
     }
-  }, [])
+  }, [loroDoc, nodeId])
 
   const debouncedSave = useCallback(() => {
     // Clear existing timeout
@@ -91,10 +105,10 @@ const Editor = ({ nodeId = 'doc-node-1' }: EditorProps) => {
     }, 2000)
   }, [saveSnapshot])
 
-  console.log('[EDITOR.tsx] loroDoc.toJSON()', loroDoc.toJSON())
+  console.log('[EDITOR.tsx] loroDoc?.toJSON()', loroDoc?.toJSON())
   
   const editor = useEditor({
-    extensions: [StarterKit, LoroExtension],
+    extensions: loroDoc ? [StarterKit, createLoroExtension(loroDoc)] : [StarterKit],
     immediatelyRender: false,
     editorProps: {
       attributes: {
@@ -102,6 +116,8 @@ const Editor = ({ nodeId = 'doc-node-1' }: EditorProps) => {
       }
     },
     onUpdate: ({ editor }) => {
+      if (!loroDoc) return
+      
       const text = editor.state.doc.textContent
       const words = text.trim().split(/\s+/).filter(word => word.length > 0)
       console.log('[EDITOR.tsx] called commit()')
@@ -111,7 +127,7 @@ const Editor = ({ nodeId = 'doc-node-1' }: EditorProps) => {
       // Trigger debounced save
       debouncedSave()
     }
-  })
+  }, [loroDoc]) // Recreate editor when loroDoc changes
 
   // Cleanup timeout on unmount
   useEffect(() => {
@@ -134,7 +150,7 @@ const Editor = ({ nodeId = 'doc-node-1' }: EditorProps) => {
     return () => clearTimeout(timer)
   }, [title])
 
-  if (isLoading || !editor) {
+  if (isLoading || !loroDoc || !editor) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="text-muted-foreground">Loading document...</div>
