@@ -1,5 +1,5 @@
 import type { Metadata } from 'next';
-import { Chatbot } from './components/chatbot';
+import Editor from './components/editor';
 import { Header } from './components/header';
 
 const title = 'Acme Inc';
@@ -13,8 +13,8 @@ export const metadata: Metadata = {
 const App = async () => {
   return (
     <>
-      <Header pages={['Building Your Application']} page="AI Chatbot" />
-      <Chatbot />
+      {/* <Header pages={['Building Your Application']} page="Editor" /> */}
+      <Editor />
     </>
   );
 };
