@@ -3,7 +3,7 @@
 import { useEditor, EditorContent } from '@tiptap/react'
 import StarterKit from '@tiptap/starter-kit'
 import { useState, useEffect } from 'react'
-import './editor.css'
+import 'app/styles/editor.css'
 
 const Editor = () => {
   const [title, setTitle] = useState('')
@@ -25,7 +25,6 @@ const Editor = () => {
     }
   })
 
-  // Auto-save title to localStorage
   useEffect(() => {
     const savedTitle = localStorage.getItem('editor-title')
     if (savedTitle) setTitle(savedTitle)
