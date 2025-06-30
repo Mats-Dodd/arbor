@@ -4,14 +4,16 @@ import { useEditor, EditorContent } from '@tiptap/react'
 import StarterKit from '@tiptap/starter-kit'
 import { useState, useEffect } from 'react'
 import 'app/styles/editor.css'
+import { LoroExtension, loroDoc } from './loro'
 
 const Editor = () => {
   const [title, setTitle] = useState('')
   const [wordCount, setWordCount] = useState(0)
+
+  console.log('[EDITOR.tsx] loroDoc.toJSON()', loroDoc.toJSON())
   
   const editor = useEditor({
-    extensions: [StarterKit],
-    content: '',
+    extensions: [StarterKit, LoroExtension],
     immediatelyRender: false,
     editorProps: {
       attributes: {
@@ -21,6 +23,9 @@ const Editor = () => {
     onUpdate: ({ editor }) => {
       const text = editor.state.doc.textContent
       const words = text.trim().split(/\s+/).filter(word => word.length > 0)
+      console.log('[EDITOR.tsx] called commit()')
+      loroDoc.commit()
+      // console.log(loroDoc.toJSON())
       setWordCount(words.length)
     }
   })
