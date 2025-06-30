@@ -1,0 +1,134 @@
+/* Tiptap Editor Styles */
+.ProseMirror {
+  @apply leading-relaxed text-base sm:text-lg;
+}
+
+/* Remove default padding/margins */
+.ProseMirror-focused {
+  @apply outline-none;
+}
+
+/* Typography */
+.ProseMirror h1 {
+  @apply text-2xl sm:text-3xl font-bold mt-8 mb-4 tracking-tight text-foreground;
+}
+
+.ProseMirror h2 {
+  @apply text-xl sm:text-2xl font-semibold mt-6 mb-3 tracking-tight text-foreground;
+}
+
+.ProseMirror h3 {
+  @apply text-lg sm:text-xl font-semibold mt-4 mb-2 text-foreground;
+}
+
+.ProseMirror h4 {
+  @apply text-base sm:text-lg font-medium mt-4 mb-2 text-foreground;
+}
+
+.ProseMirror p {
+  @apply mb-4 text-foreground/90;
+}
+
+.ProseMirror ul,
+.ProseMirror ol {
+  @apply mb-4 pl-6 text-foreground/90;
+}
+
+.ProseMirror li {
+  @apply mb-1.5;
+}
+
+.ProseMirror blockquote {
+  @apply border-l-4 border-border pl-4 italic text-muted-foreground my-4;
+}
+
+.ProseMirror code {
+  @apply bg-muted/50 px-1.5 py-0.5 rounded text-sm font-mono text-foreground;
+}
+
+.ProseMirror pre {
+  @apply bg-muted/30 p-4 rounded-lg overflow-x-auto my-4 text-sm;
+}
+
+.ProseMirror pre code {
+  @apply bg-transparent p-0 text-sm;
+}
+
+/* Selection */
+.ProseMirror ::selection {
+  @apply bg-primary/15;
+}
+
+/* Links */
+.ProseMirror a {
+  @apply text-primary underline underline-offset-2 cursor-pointer hover:opacity-80 transition-opacity;
+}
+
+/* Horizontal Rule */
+.ProseMirror hr {
+  @apply my-8 border-border/50 border-t;
+}
+
+/* Focus styles */
+.ProseMirror:focus {
+  @apply outline-none;
+}
+
+/* Smooth cursor and animations */
+.ProseMirror {
+  caret-color: currentColor;
+  transition: color 0.15s ease;
+}
+
+/* Better list styling */
+.ProseMirror ul {
+  list-style-type: disc;
+}
+
+.ProseMirror ol {
+  list-style-type: decimal;
+}
+
+/* Nested lists */
+.ProseMirror ul ul {
+  list-style-type: circle;
+  @apply mt-1;
+}
+
+.ProseMirror ul ul ul {
+  list-style-type: square;
+}
+
+/* First paragraph no top margin */
+.ProseMirror > p:first-child,
+.ProseMirror > h1:first-child,
+.ProseMirror > h2:first-child,
+.ProseMirror > h3:first-child {
+  @apply mt-0;
+}
+
+/* Better spacing for consecutive headings */
+.ProseMirror h1 + h2,
+.ProseMirror h2 + h3,
+.ProseMirror h3 + h4 {
+  @apply mt-2;
+}
+
+/* Improve readability on smaller screens */
+@media (max-width: 640px) {
+  .ProseMirror {
+    @apply text-base;
+  }
+  
+  .ProseMirror h1 {
+    @apply text-2xl;
+  }
+  
+  .ProseMirror h2 {
+    @apply text-xl;
+  }
+  
+  .ProseMirror h3 {
+    @apply text-lg;
+  }
+} 
