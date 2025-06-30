@@ -48,6 +48,7 @@ model Session {
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([token])
+  @@index([userId])
   @@map("session")
 }
 
@@ -67,6 +68,7 @@ model Account {
   createdAt             DateTime
   updatedAt             DateTime
 
+  @@index([userId])
   @@map("account")
 }
 
@@ -79,4 +81,36 @@ model Verification {
   updatedAt  DateTime?
 
   @@map("verification")
+}
+
+model Collection {
+  id        String   @id @default(uuid())
+  name      String
+  metadata  Json
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  nodes     Node[]
+}
+
+model Node {
+  id           String     @id @default(uuid())
+  name         String
+  kind         NodeKind
+  loroSnapshot Bytes
+  parentId     String?
+  parent       Node?      @relation("NodeToSubNode", fields: [parentId], references: [id], onDelete: Restrict, onUpdate: Restrict)
+  children     Node[]     @relation("NodeToSubNode")
+  metadata     Json
+  collectionId String
+  collection   Collection @relation(fields: [collectionId], references: [id])
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+
+  @@index([parentId])
+  @@index([collectionId])
+}
+
+enum NodeKind {
+  folder
+  file
 }
