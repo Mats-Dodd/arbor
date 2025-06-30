@@ -26,8 +26,8 @@ export const SignIn = () => {
         password,
       });
       
-      const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
-      router.push(appUrl);
+      // Redirect to the main authenticated page
+      router.push('/');
     } catch (err) {
       setError('Invalid email or password. Please try again.');
       console.error('Sign in error:', err);
