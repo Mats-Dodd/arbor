@@ -1,5 +1,5 @@
 import { env } from '@/env';
-import { authMiddleware } from '@repo/auth/middleware';
+import { createAuthMiddleware } from '@repo/auth/middleware';
 import { internationalizationMiddleware } from '@repo/internationalization/middleware';
 import { parseError } from '@repo/observability/error';
 import { secure } from '@repo/security';
@@ -15,8 +15,7 @@ import {
 } from 'next/server';
 
 export const config = {
-  // matcher tells Next.js which routes to run the middleware on. This runs the
-  // middleware on all routes except for static assets and Posthog ingest
+
   matcher: ['/((?!_next/static|_next/image|ingest|favicon.ico).*)'],
 };
 
@@ -24,12 +23,17 @@ const securityHeaders = env.FLAGS_SECRET
   ? noseconeMiddleware(noseconeOptionsWithToolbar)
   : noseconeMiddleware(noseconeOptions);
 
-const middleware = authMiddleware(async (_auth, request) => {
-  const i18nResponse = internationalizationMiddleware(
-    request as unknown as NextRequest
-  );
+const authMiddleware = createAuthMiddleware();
+
+const middleware: NextMiddleware = async (request: NextRequest) => {
+  const i18nResponse = internationalizationMiddleware(request);
   if (i18nResponse) {
     return i18nResponse;
+  }
+
+  const authResponse = await authMiddleware(request);
+  if (authResponse.status === 307 || authResponse.status === 302) {
+    return authResponse;
   }
 
   if (!env.ARCJET_KEY) {
@@ -39,10 +43,9 @@ const middleware = authMiddleware(async (_auth, request) => {
   try {
     await secure(
       [
-        // See https://docs.arcjet.com/bot-protection/identifying-bots
-        'CATEGORY:SEARCH_ENGINE', // Allow search engines
-        'CATEGORY:PREVIEW', // Allow preview links to show OG images
-        'CATEGORY:MONITOR', // Allow uptime monitoring services
+        'CATEGORY:SEARCH_ENGINE',
+        'CATEGORY:PREVIEW',
+        'CATEGORY:MONITOR',
       ],
       request
     );
@@ -53,6 +56,6 @@ const middleware = authMiddleware(async (_auth, request) => {
 
     return NextResponse.json({ error: message }, { status: 403 });
   }
-}) as unknown as NextMiddleware;
+};
 
 export default middleware;
