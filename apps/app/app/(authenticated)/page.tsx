@@ -1,6 +1,5 @@
 import type { Metadata } from 'next';
-import { Chatbot } from './components/chatbot';
-import { Header } from './components/header';
+import Editor from './components/editor';
 
 const title = 'Acme Inc';
 const description = 'My application.';
@@ -11,12 +10,7 @@ export const metadata: Metadata = {
 };
 
 const App = async () => {
-  return (
-    <>
-      <Header pages={['Building Your Application']} page="AI Chatbot" />
-      <Chatbot />
-    </>
-  );
+  return <Editor />;
 };
 
 export default App;
