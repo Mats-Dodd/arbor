@@ -56,18 +56,15 @@ export const useDocumentPersistence = ({
   }, [loroDoc, nodeId])
 
   const debouncedSave = useCallback(() => {
-    // Clear existing timeout
     if (saveTimeoutRef.current) {
       clearTimeout(saveTimeoutRef.current)
     }
     
-    // Set new timeout
     saveTimeoutRef.current = setTimeout(() => {
       saveSnapshot()
     }, EDITOR_CONFIG.AUTOSAVE_DELAY)
   }, [saveSnapshot])
 
-  // Cleanup timeout on unmount
   useEffect(() => {
     return () => {
       if (saveTimeoutRef.current) {

@@ -41,12 +41,10 @@ export const useEditorInstance = ({
       loroDoc.commit()
       setWordCount(words)
       
-      // Call the onUpdate callback if provided
       onUpdate?.()
     }
   }, [loroDoc, onUpdate])
 
-  // Update word count when editor content changes
   useEffect(() => {
     if (editor) {
       const text = editor.state.doc.textContent

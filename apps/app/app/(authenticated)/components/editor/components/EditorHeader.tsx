@@ -9,7 +9,6 @@ interface EditorHeaderProps {
 export const EditorHeader = ({ title, onTitleChange }: EditorHeaderProps) => {
   return (
     <>
-      {/* Back button */}
       <Link 
         href="/" 
         className={EDITOR_CONFIG.LAYOUT_CLASSES.backButton}
@@ -17,7 +16,6 @@ export const EditorHeader = ({ title, onTitleChange }: EditorHeaderProps) => {
         ← Back to documents
       </Link>
       
-      {/* Title Input */}
       <input
         type="text"
         value={title}

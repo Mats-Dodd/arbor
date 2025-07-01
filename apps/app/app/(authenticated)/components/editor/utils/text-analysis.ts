@@ -8,7 +8,6 @@ export const getCharacterCount = (text: string): number => {
 }
 
 export const getReadingTime = (wordCount: number): number => {
-  // Average reading speed: 200-250 words per minute
   const wordsPerMinute = 225
   return Math.ceil(wordCount / wordsPerMinute)
 } 

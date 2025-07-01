@@ -19,10 +19,8 @@ interface EditorProps {
 }
 
 const Editor = ({ nodeId = EDITOR_CONFIG.DEFAULT_NODE_ID }: EditorProps) => {
-  // Load document
   const { loroDoc, isLoading, error, nodeTitle } = useLoroDocument(nodeId)
   
-  // Document persistence
   const { 
     isSaving, 
     lastSaved, 
@@ -30,24 +28,20 @@ const Editor = ({ nodeId = EDITOR_CONFIG.DEFAULT_NODE_ID }: EditorProps) => {
     debouncedSave 
   } = useDocumentPersistence({ loroDoc, nodeId })
   
-  // Title management
   const { title, setTitle } = useDocumentTitle({ 
     initialTitle: nodeTitle, 
     nodeId 
   })
   
-  // Handle editor updates
   const handleEditorUpdate = useCallback(() => {
     debouncedSave()
   }, [debouncedSave])
   
-  // Editor instance
   const { editor, wordCount } = useEditorInstance({ 
     loroDoc, 
     onUpdate: handleEditorUpdate 
   })
 
-  // Show loading state
   if (isLoading || !loroDoc || !editor) {
     return <LoadingState />
   }

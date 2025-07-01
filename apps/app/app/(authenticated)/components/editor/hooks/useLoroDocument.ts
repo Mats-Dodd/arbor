@@ -26,14 +26,11 @@ export const useLoroDocument = (nodeId: string): UseLoroDocumentReturn => {
         setIsLoading(true)
         setError(null)
         
-        // Create a new LoroDoc instance
         doc = createLoroDoc()
         
-        // Load node data
         const nodeData = await NodeApiService.loadNode(nodeId)
         
         if (nodeData) {
-          // Import snapshot if available
           if (nodeData.loroSnapshot) {
             const imported = importSnapshot(doc, nodeData.loroSnapshot)
             if (!imported) {
@@ -41,12 +38,10 @@ export const useLoroDocument = (nodeId: string): UseLoroDocumentReturn => {
             }
           }
           
-          // Set title
           if (nodeData.name && mounted) {
             setNodeTitle(nodeData.name)
           }
         } else {
-          // Node doesn't exist - you might want to create it
           console.log('[useLoroDocument] Node not found:', nodeId)
         }
         
@@ -67,11 +62,9 @@ export const useLoroDocument = (nodeId: string): UseLoroDocumentReturn => {
 
     loadDocument()
 
-    // Cleanup function
     return () => {
       mounted = false
       if (doc) {
-        // Clean up the document if needed
         setLoroDoc(null)
       }
     }
