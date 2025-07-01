@@ -11,6 +11,9 @@
     "typecheck": "tsc --noEmit --emitDeclarationOnly false"
   },
   "dependencies": {
+    "@headless-tree/core": "^1.2.1",
+    "@headless-tree/react": "^1.2.1",
+    "@remixicon/react": "^4.6.0",
     "@repo/analytics": "workspace:*",
     "@repo/auth": "workspace:*",
     "@repo/collaboration": "workspace:*",

@@ -1,5 +1,6 @@
 'use client';
 
+import { useState } from 'react';
 import { Button } from '@repo/design-system/components/ui/button';
 import {
   Sidebar,
@@ -30,6 +31,7 @@ import {
 } from 'lucide-react';
 import Link from 'next/link';
 import type { ReactNode } from 'react';
+import NoteTree from './note-tree';
 
 type GlobalSidebarProperties = {
   readonly children: ReactNode;
@@ -41,16 +43,19 @@ const data = {
       title: 'Notes',
       url: '#',
       icon: Scroll,
+      id: 'notes',
     },
     {
       title: 'Logbook',
       url: '#',
       icon: CalendarFold,
+      id: 'logbook',
     },
     {
       title: 'Pile',
       url: '#',
       icon: Layers,
+      id: 'pile',
     },
   ],
   navSecondary: [
@@ -69,83 +74,56 @@ const data = {
 
 export const GlobalSidebar = ({ children }: GlobalSidebarProperties) => {
   const sidebar = useSidebar();
+  const [selectedView, setSelectedView] = useState('notes');
 
   return (
     <>
       <Sidebar variant="inset">
-        <SidebarHeader>
-          <SidebarMenu>
-            <SidebarMenuItem>
-              <div
-                className={cn(
-                  'h-[36px] overflow-hidden transition-all [&>div]:w-full',
-                  sidebar.open ? '' : '-mx-1'
-                )}
-              >
-              </div>
-            </SidebarMenuItem>
-          </SidebarMenu>
+        <SidebarHeader className="border-b">
+          <div className="flex items-center gap-1 p-2">
+            {data.navMain.map((item) => (
+              <Tooltip key={item.id}>
+                <TooltipTrigger asChild>
+                  <Button
+                    variant={selectedView === item.id ? 'secondary' : 'ghost'}
+                    size="icon"
+                    className="h-8 w-8"
+                    onClick={() => setSelectedView(item.id)}
+                  >
+                    <item.icon className="h-4 w-4" />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent side="bottom">
+                  {item.title}
+                </TooltipContent>
+              </Tooltip>
+            ))}
+          </div>
         </SidebarHeader>
  
-        <SidebarContent>
-          <SidebarGroup>
-            <SidebarMenu>
-              {data.navMain.map((item) => (
-                <SidebarMenuItem key={item.title}>
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="h-9 w-9"
-                        asChild
-                      >
-                        <Link href={item.url}>
-                          <item.icon className="h-4 w-4" />
-                        </Link>
-                      </Button>
-                    </TooltipTrigger>
-                    <TooltipContent side="right">
-                      {item.title}
-                    </TooltipContent>
-                  </Tooltip>
-                </SidebarMenuItem>
-              ))}
-            </SidebarMenu>
-          </SidebarGroup>
-          <SidebarGroup className="mt-auto">
-            <SidebarGroupContent>
-              <SidebarMenu>
-                {data.navSecondary.map((item) => (
-                  <SidebarMenuItem key={item.title}>
-                    <Tooltip>
-                      <TooltipTrigger asChild>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          className="h-9 w-9"
-                          asChild
-                        >
-                          <Link href={item.url}>
-                            <item.icon className="h-4 w-4" />
-                          </Link>
-                        </Button>
-                      </TooltipTrigger>
-                      <TooltipContent side="right">
-                        {item.title}
-                      </TooltipContent>
-                    </Tooltip>
-                  </SidebarMenuItem>
-                ))}
-              </SidebarMenu>
-            </SidebarGroupContent>
-          </SidebarGroup>
+        <SidebarContent className="px-0">
+          {selectedView === 'notes' && (
+            <div className="h-full overflow-auto">
+              <NoteTree />
+            </div>
+          )}
+          {selectedView === 'logbook' && (
+            <div className="p-4">
+              <p className="text-sm text-muted-foreground">Logbook view coming soon</p>
+            </div>
+          )}
+          {selectedView === 'pile' && (
+            <div className="p-4">
+              <p className="text-sm text-muted-foreground">Pile view coming soon</p>
+            </div>
+          )}
         </SidebarContent>
-        <SidebarFooter>
-          <SidebarMenu>
-            <SidebarMenuItem className="flex items-center gap-2">
-              <div className="flex shrink-0 items-center gap-px">
-                <Tooltip>
+
+        <SidebarFooter className="border-t">
+          <div className="flex items-center justify-between p-2">
+            <div className="flex items-center gap-1">
+              {data.navSecondary.map((item) => (
+                <Tooltip key={item.title}>
                   <TooltipTrigger asChild>
                     <Button
                       variant="ghost"
@@ -153,28 +131,47 @@ export const GlobalSidebar = ({ children }: GlobalSidebarProperties) => {
                       className="h-8 w-8"
                       asChild
                     >
-                      <Link href="#">
-                        <Settings className="h-4 w-4" />
+                      <Link href={item.url}>
+                        <item.icon className="h-4 w-4" />
                       </Link>
                     </Button>
                   </TooltipTrigger>
-                  <TooltipContent side="right">
-                    Settings
+                  <TooltipContent side="top">
+                    {item.title}
                   </TooltipContent>
                 </Tooltip>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="shrink-0"
-                  asChild
-                >
-                  <div className="h-4 w-4">
-                    <NotificationsTrigger />
-                  </div>
-                </Button>
-              </div>
-            </SidebarMenuItem>
-          </SidebarMenu>
+              ))}
+            </div>
+            <div className="flex items-center gap-1">
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-8 w-8"
+                    asChild
+                  >
+                    <Link href="#">
+                      <Settings className="h-4 w-4" />
+                    </Link>
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent side="top">
+                  Settings
+                </TooltipContent>
+              </Tooltip>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-8 w-8"
+                asChild
+              >
+                <div className="h-4 w-4">
+                  <NotificationsTrigger />
+                </div>
+              </Button>
+            </div>
+          </div>
         </SidebarFooter>
       </Sidebar>
       <SidebarInset>{children}</SidebarInset>
