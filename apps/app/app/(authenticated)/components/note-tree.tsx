@@ -133,9 +133,9 @@ export default function Component() {
   })
 
   return (
-    <div className="h-full p-2">
+    <div className="h-full p-2 [&_*]:!bg-transparent">
       <Tree
-        className="relative select-none"
+        className="relative select-none !bg-transparent [&>*]:!bg-transparent"
         indent={indent}
         tree={tree}
       >
@@ -147,9 +147,9 @@ export default function Component() {
           }
           
           return (
-            <TreeItem key={item.getId()} item={item} className="py-0">
-              <TreeItemLabel className="hover:bg-accent/50 rounded-md px-2 py-1.5 text-sm">
-                <span className="flex items-center gap-2">
+            <TreeItem key={item.getId()} item={item} className="!bg-transparent py-0">
+              <TreeItemLabel className="!bg-transparent hover:!bg-transparent px-2 py-1.5 text-sm [&>*]:!bg-transparent">
+                <span className="flex items-center gap-2 bg-transparent">
                   {!item.isFolder() &&
                     getItemIcon(
                       item.getItemData(),
