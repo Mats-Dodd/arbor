@@ -9,10 +9,8 @@ export async function PATCH(
     const { nodeId } = await params
     const { snapshot } = await request.json()
     
-    // Convert base64 string back to Buffer for database
     const snapshotBuffer = Buffer.from(snapshot, 'base64')
     
-    // Update the node with the snapshot
     const node = await database.node.update({
       where: { id: nodeId },
       data: {

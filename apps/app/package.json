@@ -39,6 +39,8 @@
     "react": "19.1.0",
     "react-dom": "19.1.0",
     "require-in-the-middle": "^7.5.2",
+    "sonner": "^2.0.3",
+    "tiptap-markdown": "^0.8.10",
     "zod": "^3.25.28"
   },
   "devDependencies": {

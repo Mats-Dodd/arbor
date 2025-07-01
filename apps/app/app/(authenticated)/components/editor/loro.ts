@@ -11,7 +11,6 @@ import {
 
 export const createLoroDoc = () => {
   const doc = new LoroDoc()
-  console.log('[LORO.ts] Created new LoroDoc')
   return doc
 }
 

@@ -12,7 +12,6 @@ export const importSnapshot = (doc: LoroDoc, snapshotBase64: string): boolean =>
   try {
     const snapshotBytes = decodeSnapshot(snapshotBase64)
     doc.import(snapshotBytes)
-    console.log('[SNAPSHOT] Imported successfully')
     return true
   } catch (error) {
     console.error('[SNAPSHOT] Import failed:', error)

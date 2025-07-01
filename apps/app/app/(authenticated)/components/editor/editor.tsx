@@ -42,6 +42,7 @@ const Editor = ({ nodeId = EDITOR_CONFIG.DEFAULT_NODE_ID }: EditorProps) => {
     onUpdate: handleEditorUpdate 
   })
 
+
   if (isLoading || !loroDoc || !editor) {
     return <LoadingState />
   }
