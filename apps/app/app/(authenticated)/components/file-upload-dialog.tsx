@@ -235,72 +235,72 @@ export default function FileUploadDialog() {
 
       {/* File list */}
       {files.length > 0 && (
-        <div className={`space-y-2 ${files.length > 3 ? 'max-h-64 overflow-y-auto' : ''}`}>
-          {files.map((file) => (
-            <div
-              key={file.id}
-              className="bg-background flex items-center justify-between gap-2 rounded-lg border p-2 pe-3"
-            >
-              <div className="flex items-center gap-3 overflow-hidden">
-                <div className="flex aspect-square size-10 shrink-0 items-center justify-center rounded border">
-                  {getFileIcon(file)}
-                </div>
-                <div className="flex min-w-0 flex-col gap-0.5">
-                  <p className="truncate text-[13px] font-medium">
-                    {file.path
-                      ? file.path.split('/').pop() // Show just the filename
-                      : file.file instanceof File
-                      ? file.file.name
-                      : file.file.name}
-                  </p>
-                  <div className="flex items-center gap-2 text-muted-foreground text-xs">
-                    <span>
-                      {formatBytes(
-                        file.file instanceof File
-                          ? file.file.size
-                          : file.file.size
+        <div className="space-y-3">
+          <div className={`space-y-2 ${files.length > 3 ? 'max-h-64 overflow-y-auto' : ''}`}>
+            {files.map((file) => (
+              <div
+                key={file.id}
+                className="bg-background flex items-center justify-between gap-2 rounded-lg border p-2 pe-3"
+              >
+                <div className="flex items-center gap-3 overflow-hidden">
+                  <div className="flex aspect-square size-10 shrink-0 items-center justify-center rounded border">
+                    {getFileIcon(file)}
+                  </div>
+                  <div className="flex min-w-0 flex-col gap-0.5">
+                    <p className="truncate text-[13px] font-medium">
+                      {file.path
+                        ? file.path.split('/').pop() // Show just the filename
+                        : file.file instanceof File
+                        ? file.file.name
+                        : file.file.name}
+                    </p>
+                    <div className="flex items-center gap-2 text-muted-foreground text-xs">
+                      <span>
+                        {formatBytes(
+                          file.file instanceof File
+                            ? file.file.size
+                            : file.file.size
+                        )}
+                      </span>
+                      {file.path && (
+                        <>
+                          <span>•</span>
+                          <span className="truncate">{file.path.split('/').slice(0, -1).join('/')}</span>
+                        </>
                       )}
-                    </span>
-                    {file.path && (
-                      <>
-                        <span>•</span>
-                        <span className="truncate">{file.path.split('/').slice(0, -1).join('/')}</span>
-                      </>
-                    )}
+                    </div>
                   </div>
                 </div>
-              </div>
 
-              <Button
-                size="icon"
-                variant="ghost"
-                className="text-muted-foreground/80 hover:text-foreground -me-2 size-8 hover:bg-transparent"
-                onClick={() => removeFile(file.id)}
-                aria-label="Remove file"
-              >
-                <XIcon className="size-4" aria-hidden="true" />
-              </Button>
-            </div>
-          ))}
-
-          {/* Action buttons */}
-          {files.length > 0 && (
-            <div className="flex gap-2">
-              <Button 
-                size="sm" 
-                onClick={handleImport}
-                disabled={isImporting}
-              >
-                <ImportIcon className="size-4 mr-2" />
-                {isImporting ? "Importing..." : "Import Files"}
-              </Button>
-              {files.length > 1 && (
-                <Button size="sm" variant="outline" onClick={clearFiles}>
-                  Remove all files
+                <Button
+                  size="icon"
+                  variant="ghost"
+                  className="text-muted-foreground/80 hover:text-foreground -me-2 size-8 hover:bg-transparent"
+                  onClick={() => removeFile(file.id)}
+                  aria-label="Remove file"
+                >
+                  <XIcon className="size-4" aria-hidden="true" />
                 </Button>
-              )}
-            </div>
-          )}
+              </div>
+            ))}
+          </div>
+
+          {/* Action buttons - always visible at bottom */}
+          <div className="flex gap-2 pt-2 border-t">
+            <Button 
+              size="sm" 
+              onClick={handleImport}
+              disabled={isImporting}
+            >
+              <ImportIcon className="size-4 mr-2" />
+              {isImporting ? "Importing..." : "Import Files"}
+            </Button>
+            {files.length > 1 && (
+              <Button size="sm" variant="outline" onClick={clearFiles}>
+                Remove all files
+              </Button>
+            )}
+          </div>
         </div>
       )}
     </div>
