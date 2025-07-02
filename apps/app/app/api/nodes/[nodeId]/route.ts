@@ -13,7 +13,8 @@ export async function GET(
         id: true,
         name: true,
         loroSnapshot: true,
-        metadata: true
+        metadata: true,
+        collectionId: true
       }
     })
     
@@ -26,7 +27,8 @@ export async function GET(
     
     const response = {
       ...node,
-      loroSnapshot: node.loroSnapshot ? Buffer.from(node.loroSnapshot).toString('base64') : null
+      loroSnapshot: node.loroSnapshot ? Buffer.from(node.loroSnapshot).toString('base64') : null,
+      collectionId: node.collectionId
     }
     
     return NextResponse.json(response)
@@ -47,27 +49,50 @@ export async function POST(
     const { nodeId } = await params
     const body = await request.json()
     
-    let collection = await database.collection.findFirst({
-      where: { name: 'Default Collection' }
-    })
+    let collection
     
-    if (!collection) {
+    // If collectionId is provided, use existing collection
+    if (body.collectionId) {
+      collection = await database.collection.findUnique({
+        where: { id: body.collectionId }
+      })
+    }
+    
+    // If collectionName is provided, create new collection
+    if (!collection && body.collectionName) {
       collection = await database.collection.create({
         data: {
-          name: 'Default Collection',
-          metadata: {}
+          name: body.collectionName,
+          metadata: body.collectionMetadata || {}
         }
       })
+    }
+    
+    // Fallback to default collection
+    if (!collection) {
+      collection = await database.collection.findFirst({
+        where: { name: 'Default Collection' }
+      })
+      
+      if (!collection) {
+        collection = await database.collection.create({
+          data: {
+            name: 'Default Collection',
+            metadata: {}
+          }
+        })
+      }
     }
     
 
     const nodeData = {
       id: nodeId,
       name: body.name || 'Untitled',
-      kind: 'file' as const,
+      kind: body.kind || 'file' as const,
       loroSnapshot: body.loroSnapshot ? Buffer.from(body.loroSnapshot, 'base64') : Buffer.from(''),
       metadata: body.metadata || {},
-      collectionId: collection.id
+      collectionId: collection.id,
+      parentId: body.parentId || undefined
     }
     
     const node = await database.node.create({
