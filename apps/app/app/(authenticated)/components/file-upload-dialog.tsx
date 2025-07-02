@@ -22,6 +22,8 @@ import {
   type FileWithPreview,
 } from "@/hooks/use-file-upload"
 import { Button } from "@repo/design-system/components/ui/button"
+import { mdToPM, markdownToJSON } from "./editor/utils/markdown-converter"
+import { LoroDoc } from "loro-crdt"
 
 
 
@@ -99,23 +101,32 @@ export default function FileUploadDialog() {
     try {
       for (const fileWrapper of files) {
         if (fileWrapper.file instanceof File) {
+          const fileName = fileWrapper.file.name.toLowerCase()
+          
+          // Double-check that it's a markdown file
+          if (!fileName.endsWith('.md')) {
+            console.warn(`Skipping non-markdown file: ${fileWrapper.file.name}`)
+            continue
+          }
+          
           // Read the file content
           const content = await fileWrapper.file.text()
           
           // Log file information
           console.log("=== File Import ===")
-          console.log("Name:", fileWrapper.file.name)
-          console.log("Path:", fileWrapper.path || fileWrapper.file.name)
-          console.log("Size:", formatBytes(fileWrapper.file.size))
-          console.log("Type:", fileWrapper.file.type)
+          console.log("File:", fileWrapper.path || fileWrapper.file.name)
           console.log("Content:")
           console.log(content)
           console.log("==================\n")
+
+          const loroDoc = new LoroDoc()
+
+          const prosemirrorJson = mdToPM(content, loroDoc)
+          console.log('[FILE_UPLOAD_DIALOG] prosemirrorJson', prosemirrorJson)
         }
       }
       
-      // Log summary
-      console.log("Total files imported:", files.length)
+ 
       
       // Group files by folder
       const folderStructure: Record<string, FileWithPreview[]> = {}
