@@ -136,7 +136,7 @@ export function AppSidebar() {
           <SidebarGroup>
             <SidebarGroupLabel>File Tree</SidebarGroupLabel>
             <SidebarGroupContent>
-              <div className="px-2 py-1 group-data-[collapsible=icon]:hidden">
+              <div className="px-2 py-1 group-data-[collapsible=icon]:hidden min-w-0">
                 {isLoading ? (
                   <div className="space-y-2">
                     <Skeleton className="h-6 w-32" />
