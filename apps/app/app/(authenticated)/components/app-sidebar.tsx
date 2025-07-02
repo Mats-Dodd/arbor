@@ -1,3 +1,6 @@
+'use client'
+
+import { useState } from 'react';
 import { Home, Search, Settings, Import} from 'lucide-react';
 import { 
   Sidebar, 
@@ -13,10 +16,14 @@ import {
   SidebarFooter
 } from './sidebar';
 import FileTree from './file-tree';
+import { CollectionImportDialog } from './collection-import-dialog';
 
 export function AppSidebar() {
+  const [importDialogOpen, setImportDialogOpen] = useState(false);
+
   return (
-    <Sidebar collapsible="icon">
+    <>
+      <Sidebar collapsible="icon">
       <SidebarHeader>
         <div className="flex items-center gap-2 px-2 py-1.5 transition-[gap] duration-300 ease-in-out group-data-[collapsible=icon]:gap-0 group-data-[collapsible=icon]:justify-center">
           <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-primary text-primary-foreground">
@@ -59,7 +66,7 @@ export function AppSidebar() {
       <SidebarFooter>
         <SidebarMenu>
           <SidebarMenuItem>
-            <SidebarMenuButton tooltip="Import">
+            <SidebarMenuButton tooltip="Import" onClick={() => setImportDialogOpen(true)}>
               <Import className="h-4 w-4" />
               <span>Import</span>
             </SidebarMenuButton>
@@ -72,5 +79,11 @@ export function AppSidebar() {
       </SidebarFooter>
       <SidebarRail />
     </Sidebar>
+    
+    <CollectionImportDialog 
+      open={importDialogOpen} 
+      onOpenChange={setImportDialogOpen} 
+    />
+  </>
   );
 } 

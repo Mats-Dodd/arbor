@@ -5,6 +5,7 @@ import { secure } from '@repo/security';
 import { headers } from 'next/headers';
 import { redirect } from 'next/navigation';
 import type { ReactNode } from 'react';
+import { Toaster } from 'sonner';
 import { PostHogIdentifier } from './components/posthog-identifier';
 import { AppSidebar } from './components/app-sidebar';
 import { 
@@ -43,6 +44,7 @@ const AppLayout = async ({ children }: AppLayoutProperties) => {
         </SidebarInset>
         <PostHogIdentifier />
       </SidebarProvider>
+      <Toaster />
     </NotificationsProvider>
   );
 };
