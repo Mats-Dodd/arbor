@@ -1,4 +1,4 @@
-import { Home, Search, Settings } from 'lucide-react';
+import { Home, Search, Settings, Upload } from 'lucide-react';
 import { 
   Sidebar, 
   SidebarHeader,
@@ -59,6 +59,10 @@ export function AppSidebar() {
       <SidebarFooter>
         <SidebarMenu>
           <SidebarMenuItem>
+            <SidebarMenuButton tooltip="Upload">
+              <Upload className="h-4 w-4" />
+              <span>Upload</span>
+            </SidebarMenuButton>
             <SidebarMenuButton tooltip="Settings">
               <Settings className="h-4 w-4" />
               <span>Settings</span>
