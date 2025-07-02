@@ -11,6 +11,7 @@ import {
   SidebarMenuButton,
   SidebarRail
 } from './sidebar';
+import FileTree from './file-tree';
 
 export function AppSidebar() {
   return (
@@ -40,6 +41,12 @@ export function AppSidebar() {
                 <SidebarMenuButton tooltip="Search">
                   <Search className="h-4 w-4" />
                   <span>Search</span>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+              <SidebarMenuItem>
+                <SidebarMenuButton tooltip="File Tree">
+                  <FileTree />
+                  <span>File Tree</span>
                 </SidebarMenuButton>
               </SidebarMenuItem>
             </SidebarMenu>
