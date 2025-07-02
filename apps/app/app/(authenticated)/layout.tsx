@@ -44,11 +44,13 @@ const AppLayout = async ({ children }: AppLayoutProperties) => {
       <SidebarProvider>
         <Sidebar collapsible="icon">
           <SidebarHeader>
-            <div className="flex items-center gap-2 px-2 py-1.5">
-              <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary text-primary-foreground">
+            <div className="flex items-center gap-2 px-2 py-1.5 transition-[gap] duration-300 ease-in-out group-data-[collapsible=icon]:gap-0 group-data-[collapsible=icon]:justify-center">
+              <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-primary text-primary-foreground">
                 A
               </div>
-              <span className="font-semibold">Arbor</span>
+              <span className="truncate font-semibold opacity-100 transition-opacity duration-300 ease-in-out group-data-[collapsible=icon]:opacity-0 group-data-[collapsible=icon]:hidden">
+                Arbor
+              </span>
             </div>
           </SidebarHeader>
           <SidebarContent>
