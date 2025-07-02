@@ -15,6 +15,7 @@ import {
   XIcon,
 } from "lucide-react"
 import { useState } from "react"
+import { useRouter } from "next/navigation"
 
 import {
   formatBytes,
@@ -25,6 +26,8 @@ import { Button } from "@repo/design-system/components/ui/button"
 import { mdToPM, markdownToJSON } from "./editor/utils/markdown-converter"
 import { LoroDoc } from "loro-crdt"
 import { exportSnapshot } from "./editor/utils/snapshot"
+import { NodeApiService } from "./editor/services/node-api"
+import { toast } from "sonner"
 
 
 
@@ -74,6 +77,7 @@ export default function FileUploadDialog() {
   const maxSize = 100 * 1024 * 1024 // 100MB default
   const maxFiles = 10000
   const [isImporting, setIsImporting] = useState(false)
+  const router = useRouter()
 
   const [
     { files, isDragging, errors },
@@ -151,12 +155,14 @@ export default function FileUploadDialog() {
         tempEditor.destroy()
         const snapshot = exportSnapshot(loroDoc)
         if (!snapshot) {
-        throw new Error('Failed to create snapshot')
-      }
+          throw new Error('Failed to create snapshot')
+        }
+        
+        console.log('[FILE_UPLOAD_DIALOG] Snapshot created successfully')
         
         return {
           file: fileWrapper,
-          loroDoc: loroDoc.toJSON()
+          snapshot: snapshot
         }
       }
 
@@ -189,8 +195,158 @@ export default function FileUploadDialog() {
         })
         console.log("======================")
       }
+
+      // Save nodes to database
+      const folderNodeIds: Record<string, string> = {}
+      const savedNodeIds: string[] = []
+      
+      // Determine the root folder name
+      let rootFolderName = 'Imported Documents'
+      if (processedFiles.length > 0) {
+        if (processedFiles[0]?.file.path) {
+          // Get the first part of the path as root folder name
+          const firstPath = processedFiles[0].file.path
+          const rootName = firstPath.split('/')[0]
+          if (rootName) {
+            rootFolderName = rootName
+          }
+        } else if (processedFiles.length === 1) {
+          // Single file - use file name without extension
+          const fileName = processedFiles[0]?.file.file instanceof File 
+            ? processedFiles[0].file.file.name 
+            : processedFiles[0]?.file.file.name
+          if (fileName) {
+            rootFolderName = fileName.replace('.md', '') + ' Collection'
+          }
+        } else {
+          // Multiple files without folders
+          rootFolderName = `Import ${new Date().toLocaleDateString()}`
+        }
+      }
+      
+      console.log(`Creating collection: ${rootFolderName}`)
+      
+      // Track if collection has been created
+      let createdCollectionId: string | null = null
+      
+      // First, create folder nodes
+      const uniqueFolders = new Set<string>()
+      processedFiles.forEach(result => {
+        if (result?.file.path) {
+          const parts = result.file.path.split('/')
+          let currentPath = ''
+          // Build all parent folder paths
+          for (let i = 0; i < parts.length - 1; i++) {
+            currentPath = parts.slice(0, i + 1).join('/')
+            uniqueFolders.add(currentPath)
+          }
+        }
+      })
+      
+      // Sort folders by depth to create parent folders first
+      const sortedFolders = Array.from(uniqueFolders).sort((a, b) => {
+        return a.split('/').length - b.split('/').length
+      })
+      
+      // Create folder nodes
+      for (const folderPath of sortedFolders) {
+        const folderName = folderPath.split('/').pop() || 'root'
+        const parentPath = folderPath.split('/').slice(0, -1).join('/')
+        const parentId = parentPath ? folderNodeIds[parentPath] : undefined
+        
+        const folderId = crypto.randomUUID()
+        folderNodeIds[folderPath] = folderId
+        
+        try {
+          const nodeData: any = {
+            name: folderName,
+            kind: 'folder' as any,
+            parentId: parentId as any,
+            metadata: {}
+          }
+          
+          // First node creates the collection
+          if (!createdCollectionId) {
+            nodeData.collectionName = rootFolderName
+          } else {
+            nodeData.collectionId = createdCollectionId
+          }
+          
+          const response = await NodeApiService.createNode(folderId, nodeData)
+          
+          // Store the collection ID from the first created node
+          if (!createdCollectionId && response) {
+            // We'll need to get the collectionId from the response
+            createdCollectionId = response.collectionId || null
+          }
+        } catch (error) {
+          console.error(`Failed to create folder ${folderName}:`, error)
+        }
+      }
+      
+      // Create file nodes
+      for (const result of processedFiles) {
+        if (!result) continue
+        
+        const fileName = result.file.path?.split('/').pop() || 
+                        (result.file.file instanceof File ? result.file.file.name : result.file.file.name)
+        const folderPath = result.file.path?.split('/').slice(0, -1).join('/') || ''
+        const parentId = folderPath ? folderNodeIds[folderPath] : undefined
+        
+        const nodeId = crypto.randomUUID()
+        
+        // Use the pre-generated snapshot directly
+        console.log(`[FILE_NODE_CREATION] Processing ${fileName}`)
+        
+        if (!result.snapshot) {
+          console.error(`[FILE_NODE_CREATION] No snapshot available for ${fileName}`)
+          continue
+        }
+        
+        const snapshot = result.snapshot
+        console.log('[FILE_NODE_CREATION] Using pre-generated snapshot')
+        
+        try {
+          const nodeData: any = {
+            name: fileName.replace('.md', ''),
+            kind: 'file' as any,
+            loroSnapshot: snapshot,
+            parentId: parentId as any,
+            metadata: {}
+          }
+          
+          // First node creates the collection if not already created
+          if (!createdCollectionId) {
+            nodeData.collectionName = rootFolderName
+          } else {
+            nodeData.collectionId = createdCollectionId
+          }
+          
+          const response = await NodeApiService.createNode(nodeId, nodeData)
+          
+          // Store the collection ID from the first created node
+          if (!createdCollectionId && response) {
+            createdCollectionId = response.collectionId || null
+          }
+          
+          savedNodeIds.push(nodeId)
+        } catch (error) {
+          console.error(`Failed to create node for ${fileName}:`, error)
+        }
+      }
+      
+      toast.success(`Successfully imported ${savedNodeIds.length} files`)
+      
+      // Navigate to the first imported file
+      if (savedNodeIds.length > 0) {
+        router.push(`/node/${savedNodeIds[0]}`)
+      }
+      
+      // Clear files after successful import
+      clearFiles()
     } catch (error) {
       console.error("Error importing files:", error)
+      toast.error(`Import failed: ${error instanceof Error ? error.message : 'Unknown error'}`)
     } finally {
       setIsImporting(false)
     }

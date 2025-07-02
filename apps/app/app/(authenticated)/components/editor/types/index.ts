@@ -4,6 +4,7 @@ export interface NodeData {
   loroSnapshot?: string
   createdAt?: string
   updatedAt?: string
+  collectionId?: string
 }
 
 export interface EditorState {
