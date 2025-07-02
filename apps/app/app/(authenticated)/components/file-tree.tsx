@@ -191,7 +191,7 @@ export default function Component({ nodes = [], collectionName = 'Collection' }:
   return (
     <div className="flex flex-col">
       <Tree
-        className="relative overflow-y-auto max-h-[calc(100vh-300px)]"
+        className="relative overflow-y-auto max-h-[calc(100vh-300px)] overflow-x-auto"
         indent={indent}
         tree={tree}
       >
@@ -219,20 +219,20 @@ export default function Component({ nodes = [], collectionName = 'Collection' }:
                   }
                 }}
               >
-                <span className="flex items-center gap-2">
+                <span className="flex items-center gap-2 min-w-0">
                   {item.isFolder() ? (
                     item.isExpanded() ? (
-                      <RiFolderOpenLine className="text-muted-foreground pointer-events-none size-4" />
+                      <RiFolderOpenLine className="text-muted-foreground pointer-events-none size-4 flex-shrink-0" />
                     ) : (
-                      <RiFolderLine className="text-muted-foreground pointer-events-none size-4" />
+                      <RiFolderLine className="text-muted-foreground pointer-events-none size-4 flex-shrink-0" />
                     )
                   ) : (
                     getFileIcon(
                       item.getItemData()?.fileExtension,
-                      "text-muted-foreground pointer-events-none size-4"
+                      "text-muted-foreground pointer-events-none size-4 flex-shrink-0"
                     )
                   )}
-                  <span className="truncate">{item.getItemName()}</span>
+                  <span className="break-all">{item.getItemName()}</span>
                 </span>
               </TreeItemLabel>
             </TreeItem>
