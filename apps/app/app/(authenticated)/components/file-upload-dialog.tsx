@@ -73,7 +73,11 @@ const getFileIcon = (file: { file: File | { type: string; name: string } }) => {
   return <FileIcon className="size-4 opacity-60" />
 }
 
-export default function FileUploadDialog() {
+interface FileUploadDialogProps {
+  onImportSuccess?: () => void;
+}
+
+export default function FileUploadDialog({ onImportSuccess }: FileUploadDialogProps) {
   const maxSize = 100 * 1024 * 1024 // 100MB default
   const maxFiles = 10000
   const [isImporting, setIsImporting] = useState(false)
@@ -368,6 +372,10 @@ export default function FileUploadDialog() {
       
       // Clear files after successful import
       clearFiles()
+
+      if (onImportSuccess) {
+        onImportSuccess()
+      }
     } catch (error) {
       console.error("Error importing files:", error)
       toast.error(`Import failed: ${error instanceof Error ? error.message : 'Unknown error'}`)
