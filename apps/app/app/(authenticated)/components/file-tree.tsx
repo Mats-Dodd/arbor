@@ -140,7 +140,7 @@ export default function Component({ nodes = [], collectionName = 'Collection' }:
 
   const tree = useTree<Item>({
     initialState: {
-      expandedItems: ["root", "app", "components"],
+      expandedItems: ["root"],
       selectedItems: pathname.startsWith('/node/') ? [pathname.split('/node/')[1]] : [],
     },
     indent,
@@ -227,12 +227,15 @@ export default function Component({ nodes = [], collectionName = 'Collection' }:
                       <RiFolderLine className="text-muted-foreground pointer-events-none size-4 flex-shrink-0" />
                     )
                   ) : (
-                    getFileIcon(
-                      item.getItemData()?.fileExtension,
-                      "text-muted-foreground pointer-events-none size-4 flex-shrink-0"
-                    )
+                    <>
+                      <div className="w-4 flex-shrink-0" />
+                      {getFileIcon(
+                        item.getItemData()?.fileExtension,
+                        "text-muted-foreground pointer-events-none size-4 flex-shrink-0"
+                      )}
+                    </>
                   )}
-                  <span className="break-all">{item.getItemName()}</span>
+                  <span className="truncate">{item.getItemName()}</span>
                 </span>
               </TreeItemLabel>
             </TreeItem>

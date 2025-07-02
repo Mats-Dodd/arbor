@@ -78,10 +78,14 @@ function TreeItem<T = any>({
   // Extract style from mergedProps to merge with our custom styles
   const { style: propStyle, ...otherProps } = mergedProps
 
+  // Calculate padding based on level
+  const paddingLeft = item.getItemMeta().level * indent
+
   // Merge styles
   const mergedStyle = {
     ...propStyle,
-    "--tree-padding": `${item.getItemMeta().level * indent}px`,
+    paddingLeft: `${paddingLeft}px`,
+    "--tree-padding": `${paddingLeft}px`,
   } as React.CSSProperties
 
   const Comp = asChild ? Slot.Root : "button"
@@ -92,7 +96,7 @@ function TreeItem<T = any>({
         data-slot="tree-item"
         style={mergedStyle}
         className={cn(
-          "w-full text-left ps-[--tree-padding] outline-hidden select-none not-last:pb-0.5 focus:z-20 data-[disabled]:pointer-events-none data-[disabled]:opacity-50",
+          "w-full text-left outline-hidden select-none not-last:pb-0.5 focus:z-20 data-[disabled]:pointer-events-none data-[disabled]:opacity-50",
           className
         )}
         data-focus={
@@ -152,7 +156,7 @@ function TreeItemLabel<T = any>({
     <span
       data-slot="tree-item-label"
       className={cn(
-        "in-focus-visible:ring-ring/50 hover:bg-accent in-data-[selected=true]:bg-accent in-data-[selected=true]:text-accent-foreground in-data-[drag-target=true]:bg-accent flex items-center gap-1 rounded-md px-2 py-1.5 text-sm transition-colors not-in-data-[folder=true]:ms-5 in-focus-visible:ring-2 in-data-[search-match=true]:bg-blue-50 [&_svg]:pointer-events-none [&_svg]:shrink-0",
+        "in-focus-visible:ring-ring/50 hover:bg-accent in-data-[selected=true]:bg-accent in-data-[selected=true]:text-accent-foreground in-data-[drag-target=true]:bg-accent flex items-center gap-1 rounded-md px-2 py-1.5 text-sm transition-colors in-focus-visible:ring-2 in-data-[search-match=true]:bg-blue-50 [&_svg]:pointer-events-none [&_svg]:shrink-0",
         className
       )}
       {...props}
