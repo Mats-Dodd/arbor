@@ -224,7 +224,9 @@ export default function FileUploadDialog() {
         }
       }
       
-      console.log(`Creating collection: ${rootFolderName}`)
+      console.log(`\n=== Import Summary ===`)
+      console.log(`Collection name: ${rootFolderName}`)
+      console.log(`Root directory will be the collection itself`)
       
       // Track if collection has been created
       let createdCollectionId: string | null = null
@@ -235,8 +237,8 @@ export default function FileUploadDialog() {
         if (result?.file.path) {
           const parts = result.file.path.split('/')
           let currentPath = ''
-          // Build all parent folder paths
-          for (let i = 0; i < parts.length - 1; i++) {
+          // Build all parent folder paths (skip the root which is index 0)
+          for (let i = 1; i < parts.length - 1; i++) {
             currentPath = parts.slice(0, i + 1).join('/')
             uniqueFolders.add(currentPath)
           }
@@ -248,11 +250,16 @@ export default function FileUploadDialog() {
         return a.split('/').length - b.split('/').length
       })
       
+      console.log(`Creating ${sortedFolders.length} folders (excluding root)`)
+      
       // Create folder nodes
       for (const folderPath of sortedFolders) {
-        const folderName = folderPath.split('/').pop() || 'root'
+        const folderName = folderPath.split('/').pop() || 'folder'
         const parentPath = folderPath.split('/').slice(0, -1).join('/')
-        const parentId = parentPath ? folderNodeIds[parentPath] : undefined
+        
+        // If parentPath is just the root folder name, don't set a parentId
+        const isDirectChildOfRoot = parentPath.split('/').length === 1
+        const parentId = isDirectChildOfRoot ? undefined : folderNodeIds[parentPath]
         
         const folderId = crypto.randomUUID()
         folderNodeIds[folderPath] = folderId
@@ -291,7 +298,17 @@ export default function FileUploadDialog() {
         const fileName = result.file.path?.split('/').pop() || 
                         (result.file.file instanceof File ? result.file.file.name : result.file.file.name)
         const folderPath = result.file.path?.split('/').slice(0, -1).join('/') || ''
-        const parentId = folderPath ? folderNodeIds[folderPath] : undefined
+        
+        // Only set parentId if the file is not in the root directory
+        let parentId: string | undefined = undefined
+        if (folderPath && folderPath.split('/').length > 1) {
+          // File is in a subdirectory
+          parentId = folderNodeIds[folderPath]
+          console.log(`[FILE_NODE_CREATION] ${fileName} is in subdirectory: ${folderPath}`)
+        } else {
+          console.log(`[FILE_NODE_CREATION] ${fileName} is in root directory`)
+        }
+        // If folderPath has only one part, it's in the root directory of the collection
         
         const nodeId = crypto.randomUUID()
         
@@ -336,6 +353,13 @@ export default function FileUploadDialog() {
       }
       
       toast.success(`Successfully imported ${savedNodeIds.length} files`)
+      
+      console.log(`\n=== Import Complete ===`)
+      console.log(`Created collection: ${rootFolderName}`)
+      console.log(`Created ${sortedFolders.length} folders`)
+      console.log(`Created ${savedNodeIds.length} files`)
+      console.log(`First file ID: ${savedNodeIds[0] || 'none'}`)
+      console.log(`======================\n`)
       
       // Navigate to the first imported file
       if (savedNodeIds.length > 0) {
