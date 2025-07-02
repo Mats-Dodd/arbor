@@ -1,6 +1,7 @@
 "use client"
 
 import React, { useState } from "react"
+import { useRouter, usePathname } from "next/navigation"
 import {
   createOnDropHandler,
   dragAndDropFeature,
@@ -126,6 +127,8 @@ function getFileIcon(extension: string | undefined, className: string) {
 const indent = 16
 
 export default function Component({ nodes = [], collectionName = 'Collection' }: FileTreeProps) {
+  const router = useRouter()
+  const pathname = usePathname()
   const initialItems = nodes.length > 0 ? nodesToTreeItems(nodes, collectionName) : {
     root: {
       name: collectionName,
@@ -138,7 +141,7 @@ export default function Component({ nodes = [], collectionName = 'Collection' }:
   const tree = useTree<Item>({
     initialState: {
       expandedItems: ["root", "app", "components"],
-      selectedItems: [],
+      selectedItems: pathname.startsWith('/node/') ? [pathname.split('/node/')[1]] : [],
     },
     indent,
     rootItemId: "root",
@@ -199,9 +202,23 @@ export default function Component({ nodes = [], collectionName = 'Collection' }:
             return null;
           }
           
+          // Get the current node ID from the pathname
+          const currentNodeId = pathname.startsWith('/node/') ? pathname.split('/node/')[1] : null
+          const isActive = item.getId() === currentNodeId
+          
           return (
             <TreeItem key={item.getId()} item={item} className="pb-0">
-              <TreeItemLabel className="rounded-md py-1.5 px-2 text-sm hover:bg-accent/50">
+              <TreeItemLabel 
+                className={`rounded-md py-1.5 px-2 text-sm hover:bg-accent/50 ${
+                  !item.isFolder() ? 'cursor-pointer' : ''
+                } ${isActive ? 'bg-accent' : ''}`}
+                onClick={() => {
+                  // Only navigate if it's a file (not a folder)
+                  if (!item.isFolder()) {
+                    router.push(`/node/${item.getId()}`)
+                  }
+                }}
+              >
                 <span className="flex items-center gap-2">
                   {item.isFolder() ? (
                     item.isExpanded() ? (
