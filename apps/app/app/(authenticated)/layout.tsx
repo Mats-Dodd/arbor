@@ -1,13 +1,27 @@
 import { env } from '@/env';
 import { auth } from '@repo/auth/server';
-import { SidebarProvider } from '@repo/design-system/components/ui/sidebar';
 import { NotificationsProvider } from '@repo/notifications/components/provider';
 import { secure } from '@repo/security';
 import { headers } from 'next/headers';
 import { redirect } from 'next/navigation';
 import type { ReactNode } from 'react';
+import { Home, Search } from 'lucide-react';
 import { PostHogIdentifier } from './components/posthog-identifier';
-import { GlobalSidebar } from './components/sidebar';
+import { 
+  Sidebar, 
+  SidebarProvider, 
+  SidebarInset,
+  SidebarTrigger,
+  SidebarHeader,
+  SidebarContent,
+  SidebarGroup,
+  SidebarGroupLabel,
+  SidebarGroupContent,
+  SidebarMenu,
+  SidebarMenuItem,
+  SidebarMenuButton,
+  SidebarRail
+} from './components/sidebar';
 
 type AppLayoutProperties = {
   readonly children: ReactNode;
@@ -28,7 +42,46 @@ const AppLayout = async ({ children }: AppLayoutProperties) => {
   return (
     <NotificationsProvider userId={session.user.id}>
       <SidebarProvider>
-        <GlobalSidebar>{children}</GlobalSidebar>
+        <Sidebar collapsible="icon">
+          <SidebarHeader>
+            <div className="flex items-center gap-2 px-2 py-1.5">
+              <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary text-primary-foreground">
+                A
+              </div>
+              <span className="font-semibold">Arbor</span>
+            </div>
+          </SidebarHeader>
+          <SidebarContent>
+            <SidebarGroup>
+              <SidebarGroupLabel>Navigation</SidebarGroupLabel>
+              <SidebarGroupContent>
+                <SidebarMenu>
+                  <SidebarMenuItem>
+                    <SidebarMenuButton tooltip="Home">
+                      <Home className="h-4 w-4" />
+                      <span>Home</span>
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
+                  <SidebarMenuItem>
+                    <SidebarMenuButton tooltip="Search">
+                      <Search className="h-4 w-4" />
+                      <span>Search</span>
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
+                </SidebarMenu>
+              </SidebarGroupContent>
+            </SidebarGroup>
+          </SidebarContent>
+          <SidebarRail />
+        </Sidebar>
+        <SidebarInset>
+          <header className="flex h-16 items-center gap-4 border-b px-4">
+            <SidebarTrigger />
+          </header>
+          <main className="flex-1 p-4">
+            {children}
+          </main>
+        </SidebarInset>
         <PostHogIdentifier />
       </SidebarProvider>
     </NotificationsProvider>
