@@ -38,6 +38,24 @@ export function AppSidebar() {
         }
         const data = await response.json();
         console.log('Latest collection:', data);
+        
+        // Log all nodes in the collection
+        if (data.nodes && data.nodes.length > 0) {
+          console.log(`Found ${data.nodes.length} nodes in collection "${data.name}":`);
+          data.nodes.forEach((node: any, index: number) => {
+            console.log(`Node ${index + 1}:`, {
+              id: node.id,
+              name: node.name,
+              kind: node.kind,
+              parentId: node.parentId,
+              metadata: node.metadata,
+              createdAt: node.createdAt,
+              updatedAt: node.updatedAt
+            });
+          });
+        } else {
+          console.log('No nodes found in collection');
+        }
       } catch (error) {
         console.error('Failed to fetch latest collection:', error);
       }
