@@ -24,6 +24,7 @@ import {
 import { Button } from "@repo/design-system/components/ui/button"
 import { mdToPM, markdownToJSON } from "./editor/utils/markdown-converter"
 import { LoroDoc } from "loro-crdt"
+import { exportSnapshot } from "./editor/utils/snapshot"
 
 
 
@@ -148,6 +149,10 @@ export default function FileUploadDialog() {
         console.log('[FILE_UPLOAD_DIALOG] loro json', loroDoc.toJSON())
     
         tempEditor.destroy()
+        const snapshot = exportSnapshot(loroDoc)
+        if (!snapshot) {
+        throw new Error('Failed to create snapshot')
+      }
         
         return {
           file: fileWrapper,
