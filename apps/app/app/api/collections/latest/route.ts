@@ -24,10 +24,7 @@ export async function GET(request: NextRequest) {
     })
 
     if (!latestCollection) {
-      return NextResponse.json(
-        { error: 'No collections found' },
-        { status: 404 }
-      )
+      return NextResponse.json(null)
     }
 
     return NextResponse.json(latestCollection)

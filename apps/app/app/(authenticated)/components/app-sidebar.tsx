@@ -2,6 +2,7 @@
 
 import { Home, Search, Settings, Upload } from 'lucide-react';
 import { useState, useEffect } from 'react';
+import dynamic from 'next/dynamic';
 import { 
   Sidebar, 
   SidebarHeader,
@@ -15,7 +16,6 @@ import {
   SidebarRail,
   SidebarFooter
 } from './sidebar';
-import FileTree from './file-tree';
 import FileUploadDialog from './file-upload-dialog';
 import {
   Dialog,
@@ -25,6 +25,19 @@ import {
   DialogTitle,
 } from "@repo/design-system/components/ui/dialog";
 import { Skeleton } from "@repo/design-system/components/ui/skeleton";
+
+// Dynamically import FileTree to prevent SSR issues
+const FileTree = dynamic(() => import('./file-tree'), {
+  ssr: false,
+  loading: () => (
+    <div className="space-y-2">
+      <Skeleton className="h-6 w-32" />
+      <Skeleton className="h-5 w-24 ml-4" />
+      <Skeleton className="h-5 w-28 ml-4" />
+      <Skeleton className="h-5 w-20 ml-4" />
+    </div>
+  )
+});
 
 export function AppSidebar() {
   const [uploadDialogOpen, setUploadDialogOpen] = useState(false);
@@ -45,6 +58,13 @@ export function AppSidebar() {
         }
         const data = await response.json();
         console.log('Latest collection:', data);
+        
+        // Handle null response (no collections exist)
+        if (!data) {
+          console.log('No collections found');
+          setCollectionData(null);
+          return;
+        }
         
         // Set the collection data
         setCollectionData({
