@@ -29,61 +29,74 @@ interface Item {
   fileExtension?: string
 }
 
-const initialItems: Record<string, Item> = {
-  app: {
-    name: "app",
-    children: ["app/layout.tsx", "app/page.tsx", "app/(dashboard)", "app/api"],
-  },
-  "app/layout.tsx": { name: "layout.tsx", fileExtension: "tsx" },
-  "app/page.tsx": { name: "page.tsx", fileExtension: "tsx" },
-  "app/(dashboard)": {
-    name: "(dashboard)",
-    children: ["app/(dashboard)/dashboard"],
-  },
-  "app/(dashboard)/dashboard": {
-    name: "dashboard",
-    children: ["app/(dashboard)/dashboard/page.tsx"],
-  },
-  "app/(dashboard)/dashboard/page.tsx": {
-    name: "page.tsx",
-    fileExtension: "tsx",
-  },
-  "app/api": { name: "api", children: ["app/api/hello"] },
-  "app/api/hello": { name: "hello", children: ["app/api/hello/route.ts"] },
-  "app/api/hello/route.ts": { name: "route.ts", fileExtension: "ts" },
-  components: {
-    name: "components",
-    children: ["components/button.tsx", "components/card.tsx"],
-  },
-  "components/button.tsx": { name: "button.tsx", fileExtension: "tsx" },
-  "components/card.tsx": { name: "card.tsx", fileExtension: "tsx" },
-  lib: { name: "lib", children: ["lib/utils.ts"] },
-  "lib/utils.ts": { name: "utils.ts", fileExtension: "ts" },
-  public: {
-    name: "public",
-    children: ["public/favicon.ico", "public/vercel.svg"],
-  },
-  "public/favicon.ico": { name: "favicon.ico", fileExtension: "ico" },
-  "public/vercel.svg": { name: "vercel.svg", fileExtension: "svg" },
-  "package.json": { name: "package.json", fileExtension: "json" },
-  "tailwind.config.ts": { name: "tailwind.config.ts", fileExtension: "ts" },
-  "tsconfig.json": { name: "tsconfig.json", fileExtension: "json" },
-  "next.config.mjs": { name: "next.config.mjs", fileExtension: "mjs" },
-  "README.md": { name: "README.md", fileExtension: "md" },
-  root: {
-    name: "Project Root",
-    children: [
-      "app",
-      "components",
-      "lib",
-      "public",
-      "package.json",
-      "tailwind.config.ts",
-      "tsconfig.json",
-      "next.config.mjs",
-      "README.md",
-    ],
-  },
+interface Node {
+  id: string
+  name: string
+  kind: 'folder' | 'file'
+  parentId: string | null
+  metadata?: any
+}
+
+interface FileTreeProps {
+  nodes?: Node[]
+  collectionName?: string
+}
+
+// Helper function to convert nodes to tree structure
+function nodesToTreeItems(nodes: Node[], collectionName: string): Record<string, Item> {
+  const items: Record<string, Item> = {}
+  
+  // Create root item
+  items.root = {
+    name: collectionName || 'Collection',
+    children: []
+  }
+  
+  // First pass: create all items
+  nodes.forEach(node => {
+    const fileExtension = node.kind === 'file' ? node.name.split('.').pop() : undefined
+    items[node.id] = {
+      name: node.name,
+      children: node.kind === 'folder' ? [] : undefined,
+      fileExtension
+    }
+  })
+  
+  // Second pass: build hierarchy
+  nodes.forEach(node => {
+    if (node.parentId && items[node.parentId]) {
+      // Add to parent's children
+      if (!items[node.parentId].children) {
+        items[node.parentId].children = []
+      }
+      items[node.parentId].children!.push(node.id)
+    } else if (!node.parentId) {
+      // Add to root if no parent
+      items.root.children!.push(node.id)
+    }
+  })
+  
+  // Sort children for each folder
+  Object.values(items).forEach(item => {
+    if (item.children) {
+      item.children.sort((a, b) => {
+        const itemA = items[a]
+        const itemB = items[b]
+        
+        // Folders first, then files
+        const isAFolder = (itemA?.children?.length ?? 0) > 0
+        const isBFolder = (itemB?.children?.length ?? 0) > 0
+        
+        if (isAFolder && !isBFolder) return -1
+        if (!isAFolder && isBFolder) return 1
+        
+        // Then alphabetically
+        return (itemA?.name ?? '').localeCompare(itemB?.name ?? '')
+      })
+    }
+  })
+  
+  return items
 }
 
 // Helper function to get icon based on file extension
@@ -112,7 +125,14 @@ function getFileIcon(extension: string | undefined, className: string) {
 
 const indent = 16
 
-export default function Component() {
+export default function Component({ nodes = [], collectionName = 'Collection' }: FileTreeProps) {
+  const initialItems = nodes.length > 0 ? nodesToTreeItems(nodes, collectionName) : {
+    root: {
+      name: collectionName,
+      children: []
+    }
+  }
+  
   const [items, setItems] = useState(initialItems)
 
   const tree = useTree<Item>({
@@ -126,7 +146,7 @@ export default function Component() {
     isItemFolder: (item) => (item.getItemData()?.children?.length ?? 0) > 0,
     canReorder: false,
     onDrop: createOnDropHandler((parentItem, newChildrenIds) => {
-      setItems((prevItems) => {
+      setItems((prevItems: Record<string, Item>) => {
         // Sort the children alphabetically
         const sortedChildren = [...newChildrenIds].sort((a, b) => {
           const itemA = prevItems[a]

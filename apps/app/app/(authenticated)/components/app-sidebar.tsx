@@ -24,20 +24,33 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@repo/design-system/components/ui/dialog";
+import { Skeleton } from "@repo/design-system/components/ui/skeleton";
 
 export function AppSidebar() {
   const [uploadDialogOpen, setUploadDialogOpen] = useState(false);
+  const [collectionData, setCollectionData] = useState<{
+    name: string;
+    nodes: any[];
+  } | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     // Fetch the latest collection
     const fetchLatestCollection = async () => {
       try {
+        setIsLoading(true);
         const response = await fetch('/api/collections/latest');
         if (!response.ok) {
           throw new Error(`HTTP error! status: ${response.status}`);
         }
         const data = await response.json();
         console.log('Latest collection:', data);
+        
+        // Set the collection data
+        setCollectionData({
+          name: data.name,
+          nodes: data.nodes || []
+        });
         
         // Log all nodes in the collection
         if (data.nodes && data.nodes.length > 0) {
@@ -58,6 +71,8 @@ export function AppSidebar() {
         }
       } catch (error) {
         console.error('Failed to fetch latest collection:', error);
+      } finally {
+        setIsLoading(false);
       }
     };
 
@@ -101,7 +116,23 @@ export function AppSidebar() {
             <SidebarGroupLabel>File Tree</SidebarGroupLabel>
             <SidebarGroupContent>
               <div className="px-2 py-1 group-data-[collapsible=icon]:hidden">
-                <FileTree />
+                {isLoading ? (
+                  <div className="space-y-2">
+                    <Skeleton className="h-6 w-32" />
+                    <Skeleton className="h-5 w-24 ml-4" />
+                    <Skeleton className="h-5 w-28 ml-4" />
+                    <Skeleton className="h-5 w-20 ml-4" />
+                  </div>
+                ) : collectionData === null ? (
+                  <div className="text-sm text-muted-foreground px-2">
+                    No collections found
+                  </div>
+                ) : (
+                  <FileTree 
+                    nodes={collectionData?.nodes || []} 
+                    collectionName={collectionData?.name || 'Collection'} 
+                  />
+                )}
               </div>
             </SidebarGroupContent>
           </SidebarGroup>
