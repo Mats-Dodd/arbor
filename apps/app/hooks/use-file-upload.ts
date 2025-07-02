@@ -22,6 +22,7 @@ export type FileWithPreview = {
   file: File | FileMetadata
   id: string
   preview?: string
+  path?: string // Relative path when uploaded from a folder
 }
 
 export type FileUploadOptions = {
@@ -29,6 +30,7 @@ export type FileUploadOptions = {
   maxSize?: number // in bytes
   accept?: string
   multiple?: boolean // Defaults to false
+  directory?: boolean // Allows folder/directory upload, defaults to false
   initialFiles?: FileMetadata[]
   onFilesChange?: (files: FileWithPreview[]) => void // Callback when files change
   onFilesAdded?: (addedFiles: FileWithPreview[]) => void // Callback when new files are added
@@ -55,6 +57,7 @@ export type FileUploadActions = {
     props?: InputHTMLAttributes<HTMLInputElement>
   ) => InputHTMLAttributes<HTMLInputElement> & {
     ref: React.Ref<HTMLInputElement>
+    webkitdirectory?: string
   }
 }
 
@@ -66,6 +69,7 @@ export const useFileUpload = (
     maxSize = Infinity,
     accept = "*",
     multiple = false,
+    directory = false,
     initialFiles = [],
     onFilesChange,
     onFilesAdded,
@@ -223,11 +227,18 @@ export const useFileUpload = (
         if (error) {
           errors.push(error)
         } else {
-          validFiles.push({
+          const fileWithPreview: FileWithPreview = {
             file,
             id: generateUniqueId(file),
             preview: createPreview(file),
-          })
+          }
+          
+          // Add path information if available (from folder uploads)
+          if ('webkitRelativePath' in file && file.webkitRelativePath) {
+            fileWithPreview.path = file.webkitRelativePath
+          }
+          
+          validFiles.push(fileWithPreview)
         }
       })
 
@@ -369,7 +380,7 @@ export const useFileUpload = (
 
   const getInputProps = useCallback(
     (props: InputHTMLAttributes<HTMLInputElement> = {}) => {
-      return {
+      const inputProps: any = {
         ...props,
         type: "file" as const,
         onChange: handleFileChange,
@@ -377,8 +388,18 @@ export const useFileUpload = (
         multiple: props.multiple !== undefined ? props.multiple : multiple,
         ref: inputRef,
       }
+
+      // Add directory attributes if directory mode is enabled
+      if (directory) {
+        inputProps.webkitdirectory = ""
+        inputProps.directory = ""
+        // When uploading directories, multiple is implicitly true
+        inputProps.multiple = true
+      }
+
+      return inputProps
     },
-    [accept, multiple, handleFileChange]
+    [accept, multiple, directory, handleFileChange]
   )
 
   return [

@@ -7,48 +7,36 @@ import {
   FileSpreadsheetIcon,
   FileTextIcon,
   FileUpIcon,
+  FolderIcon,
   HeadphonesIcon,
   ImageIcon,
+  ImportIcon,
   VideoIcon,
   XIcon,
 } from "lucide-react"
+import { useState } from "react"
 
 import {
   formatBytes,
   useFileUpload,
+  type FileWithPreview,
 } from "@/hooks/use-file-upload"
 import { Button } from "@repo/design-system/components/ui/button"
 
-// Create some dummy initial files
-const initialFiles = [
-  {
-    name: "document.pdf",
-    size: 528737,
-    type: "application/pdf",
-    url: "https://example.com/document.pdf",
-    id: "document.pdf-1744638436563-8u5xuls",
-  },
-  {
-    name: "intro.zip",
-    size: 252873,
-    type: "application/zip",
-    url: "https://example.com/intro.zip",
-    id: "intro.zip-1744638436563-8u5xuls",
-  },
-  {
-    name: "conclusion.xlsx",
-    size: 352873,
-    type: "application/xlsx",
-    url: "https://example.com/conclusion.xlsx",
-    id: "conclusion.xlsx-1744638436563-8u5xuls",
-  },
-]
+
 
 const getFileIcon = (file: { file: File | { type: string; name: string } }) => {
   const fileType = file.file instanceof File ? file.file.type : file.file.type
   const fileName = file.file instanceof File ? file.file.name : file.file.name
 
+  // Markdown files
   if (
+    fileName.endsWith(".md") ||
+    fileType.includes("markdown") ||
+    fileType === "text/x-markdown"
+  ) {
+    return <FileTextIcon className="size-4 opacity-60" />
+  } else if (
     fileType.includes("pdf") ||
     fileName.endsWith(".pdf") ||
     fileType.includes("word") ||
@@ -81,7 +69,8 @@ const getFileIcon = (file: { file: File | { type: string; name: string } }) => {
 
 export default function FileUploadDialog() {
   const maxSize = 100 * 1024 * 1024 // 100MB default
-  const maxFiles = 10
+  const maxFiles = 10000
+  const [isImporting, setIsImporting] = useState(false)
 
   const [
     { files, isDragging, errors },
@@ -97,10 +86,63 @@ export default function FileUploadDialog() {
     },
   ] = useFileUpload({
     multiple: true,
+    directory: true,
     maxFiles,
     maxSize,
-    initialFiles,
+    accept: ".md,text/markdown,text/x-markdown", // Only accept markdown files
+    initialFiles: [], // Remove the dummy files since we only want .md files
   })
+
+  const handleImport = async () => {
+    setIsImporting(true)
+    
+    try {
+      for (const fileWrapper of files) {
+        if (fileWrapper.file instanceof File) {
+          // Read the file content
+          const content = await fileWrapper.file.text()
+          
+          // Log file information
+          console.log("=== File Import ===")
+          console.log("Name:", fileWrapper.file.name)
+          console.log("Path:", fileWrapper.path || fileWrapper.file.name)
+          console.log("Size:", formatBytes(fileWrapper.file.size))
+          console.log("Type:", fileWrapper.file.type)
+          console.log("Content:")
+          console.log(content)
+          console.log("==================\n")
+        }
+      }
+      
+      // Log summary
+      console.log("Total files imported:", files.length)
+      
+      // Group files by folder
+      const folderStructure: Record<string, FileWithPreview[]> = {}
+      files.forEach((file) => {
+        if (file.path) {
+          const folderPath = file.path.split('/').slice(0, -1).join('/')
+          if (!folderStructure[folderPath]) {
+            folderStructure[folderPath] = []
+          }
+          folderStructure[folderPath].push(file)
+        }
+      })
+      
+      if (Object.keys(folderStructure).length > 0) {
+        console.log("\n=== Folder Structure ===")
+        Object.entries(folderStructure).forEach(([folder, files]) => {
+          console.log(`Folder: ${folder || 'root'}`)
+          console.log(`  Files: ${files.map(f => f.path?.split('/').pop()).join(', ')}`)
+        })
+        console.log("======================")
+      }
+    } catch (error) {
+      console.error("Error importing files:", error)
+    } finally {
+      setIsImporting(false)
+    }
+  }
 
   return (
     <div className="flex flex-col gap-4">
@@ -118,22 +160,30 @@ export default function FileUploadDialog() {
         <input
           {...getInputProps()}
           className="sr-only"
-          aria-label="Upload files"
+          aria-label="Upload files or folders"
         />
 
         <div className="flex flex-col items-center justify-center text-center">
-          <div
-            className="bg-background mb-2 flex size-11 shrink-0 items-center justify-center rounded-full border"
-            aria-hidden="true"
-          >
-            <FileUpIcon className="size-4 opacity-60" />
+          <div className="flex gap-2 mb-2">
+            <div
+              className="bg-background flex size-11 shrink-0 items-center justify-center rounded-full border"
+              aria-hidden="true"
+            >
+              <FileUpIcon className="size-4 opacity-60" />
+            </div>
+            <div
+              className="bg-background flex size-11 shrink-0 items-center justify-center rounded-full border"
+              aria-hidden="true"
+            >
+              <FolderIcon className="size-4 opacity-60" />
+            </div>
           </div>
-          <p className="mb-1.5 text-sm font-medium">Upload files</p>
+          <p className="mb-1.5 text-sm font-medium">Upload Markdown files or folders</p>
           <p className="text-muted-foreground mb-2 text-xs">
             Drag & drop or click to browse
           </p>
           <div className="text-muted-foreground/70 flex flex-wrap justify-center gap-1 text-xs">
-            <span>All files</span>
+            <span>Markdown files only (.md)</span>
             <span>∙</span>
             <span>Max {maxFiles} files</span>
             <span>∙</span>
@@ -166,17 +216,27 @@ export default function FileUploadDialog() {
                 </div>
                 <div className="flex min-w-0 flex-col gap-0.5">
                   <p className="truncate text-[13px] font-medium">
-                    {file.file instanceof File
+                    {file.path
+                      ? file.path.split('/').pop() // Show just the filename
+                      : file.file instanceof File
                       ? file.file.name
                       : file.file.name}
                   </p>
-                  <p className="text-muted-foreground text-xs">
-                    {formatBytes(
-                      file.file instanceof File
-                        ? file.file.size
-                        : file.file.size
+                  <div className="flex items-center gap-2 text-muted-foreground text-xs">
+                    <span>
+                      {formatBytes(
+                        file.file instanceof File
+                          ? file.file.size
+                          : file.file.size
+                      )}
+                    </span>
+                    {file.path && (
+                      <>
+                        <span>•</span>
+                        <span className="truncate">{file.path.split('/').slice(0, -1).join('/')}</span>
+                      </>
                     )}
-                  </p>
+                  </div>
                 </div>
               </div>
 
@@ -192,12 +252,22 @@ export default function FileUploadDialog() {
             </div>
           ))}
 
-          {/* Remove all files button */}
-          {files.length > 1 && (
-            <div>
-              <Button size="sm" variant="outline" onClick={clearFiles}>
-                Remove all files
+          {/* Action buttons */}
+          {files.length > 0 && (
+            <div className="flex gap-2">
+              <Button 
+                size="sm" 
+                onClick={handleImport}
+                disabled={isImporting}
+              >
+                <ImportIcon className="size-4 mr-2" />
+                {isImporting ? "Importing..." : "Import Files"}
               </Button>
+              {files.length > 1 && (
+                <Button size="sm" variant="outline" onClick={clearFiles}>
+                  Remove all files
+                </Button>
+              )}
             </div>
           )}
         </div>
