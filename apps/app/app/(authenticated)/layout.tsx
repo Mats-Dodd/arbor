@@ -1,13 +1,17 @@
 import { env } from '@/env';
 import { auth } from '@repo/auth/server';
-import { SidebarProvider } from '@repo/design-system/components/ui/sidebar';
 import { NotificationsProvider } from '@repo/notifications/components/provider';
 import { secure } from '@repo/security';
 import { headers } from 'next/headers';
 import { redirect } from 'next/navigation';
 import type { ReactNode } from 'react';
 import { PostHogIdentifier } from './components/posthog-identifier';
-import { GlobalSidebar } from './components/sidebar';
+import { AppSidebar } from './components/app-sidebar';
+import { 
+  SidebarProvider, 
+  SidebarInset,
+  SidebarTrigger
+} from './components/sidebar';
 
 type AppLayoutProperties = {
   readonly children: ReactNode;
@@ -28,7 +32,15 @@ const AppLayout = async ({ children }: AppLayoutProperties) => {
   return (
     <NotificationsProvider userId={session.user.id}>
       <SidebarProvider>
-        <GlobalSidebar>{children}</GlobalSidebar>
+        <AppSidebar />
+        <SidebarInset>
+          <header className="flex h-16 items-center gap-4 border-b px-4">
+            <SidebarTrigger />
+          </header>
+          <main className="flex-1 p-4">
+            {children}
+          </main>
+        </SidebarInset>
         <PostHogIdentifier />
       </SidebarProvider>
     </NotificationsProvider>

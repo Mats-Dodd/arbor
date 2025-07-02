@@ -11,6 +11,7 @@
     "typecheck": "tsc --noEmit --emitDeclarationOnly false"
   },
   "dependencies": {
+    "@radix-ui/react-slot": "^1.2.3",
     "@repo/analytics": "workspace:*",
     "@repo/auth": "workspace:*",
     "@repo/collaboration": "workspace:*",
@@ -28,6 +29,7 @@
     "@tiptap/pm": "^2.23.0",
     "@tiptap/react": "^2.23.0",
     "@tiptap/starter-kit": "^2.23.0",
+    "class-variance-authority": "^0.7.1",
     "fuse.js": "^7.1.0",
     "import-in-the-middle": "^1.13.2",
     "loro-crdt": "^1.5.9",
