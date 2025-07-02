@@ -47,55 +47,56 @@ export function AppSidebar() {
   } | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
-  useEffect(() => {
-    // Fetch the latest collection
-    const fetchLatestCollection = async () => {
-      try {
-        setIsLoading(true);
-        const response = await fetch('/api/collections/latest');
-        if (!response.ok) {
-          throw new Error(`HTTP error! status: ${response.status}`);
-        }
-        const data = await response.json();
-        console.log('Latest collection:', data);
-        
-        // Handle null response (no collections exist)
-        if (!data) {
-          console.log('No collections found');
-          setCollectionData(null);
-          return;
-        }
-        
-        // Set the collection data
-        setCollectionData({
-          name: data.name,
-          nodes: data.nodes || []
-        });
-        
-        // Log all nodes in the collection
-        if (data.nodes && data.nodes.length > 0) {
-          console.log(`Found ${data.nodes.length} nodes in collection "${data.name}":`);
-          data.nodes.forEach((node: any, index: number) => {
-            console.log(`Node ${index + 1}:`, {
-              id: node.id,
-              name: node.name,
-              kind: node.kind,
-              parentId: node.parentId,
-              metadata: node.metadata,
-              createdAt: node.createdAt,
-              updatedAt: node.updatedAt
-            });
-          });
-        } else {
-          console.log('No nodes found in collection');
-        }
-      } catch (error) {
-        console.error('Failed to fetch latest collection:', error);
-      } finally {
-        setIsLoading(false);
+  // Move fetchLatestCollection outside of useEffect so it can be called elsewhere
+  const fetchLatestCollection = async () => {
+    try {
+      setIsLoading(true);
+      const response = await fetch('/api/collections/latest');
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
       }
-    };
+      const data = await response.json();
+      console.log('Latest collection:', data);
+      
+      // Handle null response (no collections exist)
+      if (!data) {
+        console.log('No collections found');
+        setCollectionData(null);
+        return;
+      }
+      
+      // Set the collection data
+      setCollectionData({
+        name: data.name,
+        nodes: data.nodes || []
+      });
+      
+      // Log all nodes in the collection
+      if (data.nodes && data.nodes.length > 0) {
+        console.log(`Found ${data.nodes.length} nodes in collection "${data.name}":`);
+        data.nodes.forEach((node: any, index: number) => {
+          console.log(`Node ${index + 1}:`, {
+            id: node.id,
+            name: node.name,
+            kind: node.kind,
+            parentId: node.parentId,
+            metadata: node.metadata,
+            createdAt: node.createdAt,
+            updatedAt: node.updatedAt
+          });
+        });
+      } else {
+        console.log('No nodes found in collection');
+      }
+    } catch (error) {
+      console.error('Failed to fetch latest collection:', error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
+  useEffect(() => {
+    // Fetch the latest collection on mount
     fetchLatestCollection();
   }, []);
 
@@ -185,7 +186,10 @@ export function AppSidebar() {
               Drag and drop files or click to browse. You can upload multiple files at once.
             </DialogDescription>
           </DialogHeader>
-          <FileUploadDialog />
+          <FileUploadDialog onImportSuccess={() => {
+            fetchLatestCollection();
+            setUploadDialogOpen(false);
+          }} />
         </DialogContent>
       </Dialog>
     </>
