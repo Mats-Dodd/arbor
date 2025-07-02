@@ -1,4 +1,4 @@
-import { Home, Search } from 'lucide-react';
+import { Home, Search, Settings } from 'lucide-react';
 import { 
   Sidebar, 
   SidebarHeader,
@@ -9,7 +9,8 @@ import {
   SidebarMenu,
   SidebarMenuItem,
   SidebarMenuButton,
-  SidebarRail
+  SidebarRail,
+  SidebarFooter
 } from './sidebar';
 import FileTree from './file-tree';
 
@@ -55,6 +56,16 @@ export function AppSidebar() {
           </SidebarGroupContent>
         </SidebarGroup>
       </SidebarContent>
+      <SidebarFooter>
+        <SidebarMenu>
+          <SidebarMenuItem>
+            <SidebarMenuButton tooltip="Settings">
+              <Settings className="h-4 w-4" />
+              <span>Settings</span>
+            </SidebarMenuButton>
+          </SidebarMenuItem>
+        </SidebarMenu>
+      </SidebarFooter>
       <SidebarRail />
     </Sidebar>
   );
