@@ -123,6 +123,26 @@ export default function FileUploadDialog() {
 
           const prosemirrorJson = mdToPM(content, loroDoc)
           console.log('[FILE_UPLOAD_DIALOG] prosemirrorJson', prosemirrorJson)
+
+          const { Editor } = await import('@tiptap/core')
+          const StarterKit = await import('@tiptap/starter-kit')
+          const { createLoroExtension } = await import('./editor/loro')
+      
+          const tempEditor = new Editor({
+            extensions: [
+                StarterKit.default,
+                createLoroExtension(loroDoc)
+            ],
+                content: prosemirrorJson
+            })
+          tempEditor.commands.setContent(prosemirrorJson)
+      
+            await new Promise(resolve => setTimeout(resolve, 1000))
+
+            loroDoc.commit()
+            console.log('[FILE_UPLOAD_DIALOG] loro json', loroDoc.toJSON())
+      
+            tempEditor.destroy()
         }
       }
       
