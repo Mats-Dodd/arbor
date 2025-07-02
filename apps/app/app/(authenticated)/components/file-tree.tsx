@@ -17,6 +17,8 @@ import {
   RiFileTextLine,
   RiImageLine,
   RiReactjsLine,
+  RiFolderLine,
+  RiFolderOpenLine,
 } from "@remixicon/react"
 
 import { Tree, TreeItem, TreeItemLabel } from "./tree"
@@ -108,15 +110,15 @@ function getFileIcon(extension: string | undefined, className: string) {
   }
 }
 
-const indent = 20
+const indent = 16
 
 export default function Component() {
   const [items, setItems] = useState(initialItems)
 
   const tree = useTree<Item>({
     initialState: {
-      expandedItems: ["app", "app/(dashboard)", "app/(dashboard)/dashboard"],
-      selectedItems: ["components"],
+      expandedItems: ["root", "app", "components"],
+      selectedItems: [],
     },
     indent,
     rootItemId: "root",
@@ -164,48 +166,42 @@ export default function Component() {
   })
 
   return (
-    <div className="flex h-full flex-col gap-2 *:first:grow">
-      <div>
-        <Tree
-          className="relative before:absolute before:inset-0 before:-ms-1 before:bg-[repeating-linear-gradient(to_right,transparent_0,transparent_calc(var(--tree-indent)-1px),var(--border)_calc(var(--tree-indent)-1px),var(--border)_calc(var(--tree-indent)))]"
-          indent={indent}
-          tree={tree}
-        >
-          <AssistiveTreeDescription tree={tree} />
-          {tree.getItems().map((item) => {
-            return (
-              <TreeItem key={item.getId()} item={item} className="pb-0!">
-                <TreeItemLabel className="rounded-none py-1">
-                  <span className="flex items-center gap-2">
-                    {!item.isFolder() &&
-                      getFileIcon(
-                        item.getItemData()?.fileExtension,
-                        "text-muted-foreground pointer-events-none size-4"
-                      )}
-                    {item.getItemName()}
-                  </span>
-                </TreeItemLabel>
-              </TreeItem>
-            )
-          })}
-        </Tree>
-      </div>
-
-      <p
-        aria-live="polite"
-        role="region"
-        className="text-muted-foreground mt-2 text-xs"
+    <div className="flex flex-col">
+      <Tree
+        className="relative overflow-y-auto max-h-[calc(100vh-300px)]"
+        indent={indent}
+        tree={tree}
       >
-        File editor with drag and drop ∙{" "}
-        <a
-          href="https://headless-tree.lukasbach.com"
-          className="hover:text-foreground underline"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          API
-        </a>
-      </p>
+        <AssistiveTreeDescription tree={tree} />
+        {tree.getItems().map((item) => {
+          // Skip rendering the root item
+          if (item.getId() === "root") {
+            return null;
+          }
+          
+          return (
+            <TreeItem key={item.getId()} item={item} className="pb-0">
+              <TreeItemLabel className="rounded-md py-1.5 px-2 text-sm hover:bg-accent/50">
+                <span className="flex items-center gap-2">
+                  {item.isFolder() ? (
+                    item.isExpanded() ? (
+                      <RiFolderOpenLine className="text-muted-foreground pointer-events-none size-4" />
+                    ) : (
+                      <RiFolderLine className="text-muted-foreground pointer-events-none size-4" />
+                    )
+                  ) : (
+                    getFileIcon(
+                      item.getItemData()?.fileExtension,
+                      "text-muted-foreground pointer-events-none size-4"
+                    )
+                  )}
+                  <span className="truncate">{item.getItemName()}</span>
+                </span>
+              </TreeItemLabel>
+            </TreeItem>
+          )
+        })}
+      </Tree>
     </div>
   )
 }
