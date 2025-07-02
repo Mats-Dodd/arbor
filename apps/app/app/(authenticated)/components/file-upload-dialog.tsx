@@ -99,54 +99,70 @@ export default function FileUploadDialog() {
     setIsImporting(true)
     
     try {
-      for (const fileWrapper of files) {
-        if (fileWrapper.file instanceof File) {
-          const fileName = fileWrapper.file.name.toLowerCase()
-          
-          // Double-check that it's a markdown file
-          if (!fileName.endsWith('.md')) {
-            console.warn(`Skipping non-markdown file: ${fileWrapper.file.name}`)
-            continue
-          }
-          
-          // Read the file content
-          const content = await fileWrapper.file.text()
-          
-          // Log file information
-          console.log("=== File Import ===")
-          console.log("File:", fileWrapper.path || fileWrapper.file.name)
-          console.log("Content:")
-          console.log(content)
-          console.log("==================\n")
+      // Pre-import the modules once to avoid repeated dynamic imports
+      const [{ Editor }, StarterKit, { createLoroExtension }] = await Promise.all([
+        import('@tiptap/core'),
+        import('@tiptap/starter-kit'),
+        import('./editor/loro')
+      ])
 
-          const loroDoc = new LoroDoc()
+      // Process all files in parallel
+      const processFile = async (fileWrapper: FileWithPreview) => {
+        if (!(fileWrapper.file instanceof File)) return null
+        
+        const fileName = fileWrapper.file.name.toLowerCase()
+        
+        // Double-check that it's a markdown file
+        if (!fileName.endsWith('.md')) {
+          console.warn(`Skipping non-markdown file: ${fileWrapper.file.name}`)
+          return null
+        }
+        
+        // Read the file content
+        const content = await fileWrapper.file.text()
+        
+        // Log file information
+        console.log("=== File Import ===")
+        console.log("File:", fileWrapper.path || fileWrapper.file.name)
+        console.log("Content:")
+        console.log(content)
+        console.log("==================\n")
 
-          const prosemirrorJson = mdToPM(content, loroDoc)
-          console.log('[FILE_UPLOAD_DIALOG] prosemirrorJson', prosemirrorJson)
+        const loroDoc = new LoroDoc()
+        const prosemirrorJson = mdToPM(content, loroDoc)
+        console.log('[FILE_UPLOAD_DIALOG] prosemirrorJson', prosemirrorJson)
+    
+        const tempEditor = new Editor({
+          extensions: [
+            StarterKit.default,
+            createLoroExtension(loroDoc)
+          ],
+          content: prosemirrorJson
+        })
+        tempEditor.commands.setContent(prosemirrorJson)
+    
+        // Reduced delay since we're processing in parallel
+        await new Promise(resolve => setTimeout(resolve, 100))
 
-          const { Editor } = await import('@tiptap/core')
-          const StarterKit = await import('@tiptap/starter-kit')
-          const { createLoroExtension } = await import('./editor/loro')
-      
-          const tempEditor = new Editor({
-            extensions: [
-                StarterKit.default,
-                createLoroExtension(loroDoc)
-            ],
-                content: prosemirrorJson
-            })
-          tempEditor.commands.setContent(prosemirrorJson)
-      
-            await new Promise(resolve => setTimeout(resolve, 1000))
-
-            loroDoc.commit()
-            console.log('[FILE_UPLOAD_DIALOG] loro json', loroDoc.toJSON())
-      
-            tempEditor.destroy()
+        loroDoc.commit()
+        console.log('[FILE_UPLOAD_DIALOG] loro json', loroDoc.toJSON())
+    
+        tempEditor.destroy()
+        
+        return {
+          file: fileWrapper,
+          loroDoc: loroDoc.toJSON()
         }
       }
+
+      // Process all files in parallel
+      const results = await Promise.all(
+        files.map(processFile)
+      )
       
- 
+      // Filter out null results (skipped files)
+      const processedFiles = results.filter(result => result !== null)
+      console.log(`Successfully processed ${processedFiles.length} files`)
       
       // Group files by folder
       const folderStructure: Record<string, FileWithPreview[]> = {}
