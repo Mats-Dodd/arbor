@@ -1,4 +1,4 @@
-import { Home, Search } from 'lucide-react';
+import { Home, Search, Settings } from 'lucide-react';
 import { 
   Sidebar, 
   SidebarHeader,
@@ -9,8 +9,10 @@ import {
   SidebarMenu,
   SidebarMenuItem,
   SidebarMenuButton,
-  SidebarRail
+  SidebarRail,
+  SidebarFooter
 } from './sidebar';
+import FileTree from './file-tree';
 
 export function AppSidebar() {
   return (
@@ -45,7 +47,25 @@ export function AppSidebar() {
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
+        <SidebarGroup>
+          <SidebarGroupLabel>File Tree</SidebarGroupLabel>
+          <SidebarGroupContent>
+            <div className="px-2 py-1 group-data-[collapsible=icon]:hidden">
+              <FileTree />
+            </div>
+          </SidebarGroupContent>
+        </SidebarGroup>
       </SidebarContent>
+      <SidebarFooter>
+        <SidebarMenu>
+          <SidebarMenuItem>
+            <SidebarMenuButton tooltip="Settings">
+              <Settings className="h-4 w-4" />
+              <span>Settings</span>
+            </SidebarMenuButton>
+          </SidebarMenuItem>
+        </SidebarMenu>
+      </SidebarFooter>
       <SidebarRail />
     </Sidebar>
   );
