@@ -1,7 +1,7 @@
 "use client"
 
 import { Home, Search, Settings, Upload } from 'lucide-react';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { 
   Sidebar, 
   SidebarHeader,
@@ -27,6 +27,24 @@ import {
 
 export function AppSidebar() {
   const [uploadDialogOpen, setUploadDialogOpen] = useState(false);
+
+  useEffect(() => {
+    // Fetch the latest collection
+    const fetchLatestCollection = async () => {
+      try {
+        const response = await fetch('/api/collections/latest');
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        const data = await response.json();
+        console.log('Latest collection:', data);
+      } catch (error) {
+        console.error('Failed to fetch latest collection:', error);
+      }
+    };
+
+    fetchLatestCollection();
+  }, []);
 
   return (
     <>
