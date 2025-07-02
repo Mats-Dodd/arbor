@@ -152,6 +152,7 @@ export function AppSidebar() {
                   <FileTree 
                     nodes={collectionData?.nodes || []} 
                     collectionName={collectionData?.name || 'Collection'} 
+                    onNodeMoved={fetchLatestCollection}
                   />
                 )}
               </div>

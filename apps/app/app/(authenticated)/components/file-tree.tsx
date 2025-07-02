@@ -41,6 +41,7 @@ interface Node {
 interface FileTreeProps {
   nodes?: Node[]
   collectionName?: string
+  onNodeMoved?: () => void
 }
 
 // Helper function to convert nodes to tree structure
@@ -126,7 +127,7 @@ function getFileIcon(extension: string | undefined, className: string) {
 
 const indent = 16
 
-export default function Component({ nodes = [], collectionName = 'Collection' }: FileTreeProps) {
+export default function Component({ nodes = [], collectionName = 'Collection', onNodeMoved }: FileTreeProps) {
   const router = useRouter()
   const pathname = usePathname()
   const initialItems = nodes.length > 0 ? nodesToTreeItems(nodes, collectionName) : {
@@ -137,6 +138,7 @@ export default function Component({ nodes = [], collectionName = 'Collection' }:
   }
   
   const [items, setItems] = useState(initialItems)
+  const [isMoving, setIsMoving] = useState(false)
 
   const tree = useTree<Item>({
     initialState: {
@@ -148,32 +150,84 @@ export default function Component({ nodes = [], collectionName = 'Collection' }:
     getItemName: (item) => item.getItemData()?.name ?? "Unknown",
     isItemFolder: (item) => (item.getItemData()?.children?.length ?? 0) > 0,
     canReorder: false,
-    onDrop: createOnDropHandler((parentItem, newChildrenIds) => {
-      setItems((prevItems: Record<string, Item>) => {
-        // Sort the children alphabetically
-        const sortedChildren = [...newChildrenIds].sort((a, b) => {
-          const itemA = prevItems[a]
-          const itemB = prevItems[b]
-
-          // First sort folders before files
-          const isAFolder = (itemA?.children?.length ?? 0) > 0
-          const isBFolder = (itemB?.children?.length ?? 0) > 0
-
-          if (isAFolder && !isBFolder) return -1
-          if (!isAFolder && isBFolder) return 1
-
-          // Then sort alphabetically by name
-          return (itemA?.name ?? "").localeCompare(itemB?.name ?? "")
-        })
-
-        return {
-          ...prevItems,
-          [parentItem.getId()]: {
-            ...prevItems[parentItem.getId()],
-            children: sortedChildren,
+    onDrop: createOnDropHandler(async (parentItem, newChildrenIds) => {
+      // Get the parent ID (null if root)
+      const newParentId = parentItem.getId() === 'root' ? null : parentItem.getId();
+      
+      // For simplicity, we'll handle one node at a time
+      // In a real app, you might want to handle multiple selections
+      const movedNodeId = newChildrenIds.find(id => {
+        // Find which node was moved by checking if it's new to this parent
+        const currentChildren = items[parentItem.getId()]?.children || [];
+        return !currentChildren.includes(id);
+      });
+      
+      if (!movedNodeId || movedNodeId === 'root') return;
+      
+      setIsMoving(true);
+      
+      try {
+        // Call the API to move the node
+        const response = await fetch(`/api/nodes/${movedNodeId}/move`, {
+          method: 'PATCH',
+          headers: {
+            'Content-Type': 'application/json',
           },
+          body: JSON.stringify({ parentId: newParentId }),
+        });
+        
+        if (!response.ok) {
+          throw new Error('Failed to move node');
         }
-      })
+        
+        // Update local state on success
+        setItems((prevItems: Record<string, Item>) => {
+          // Remove the node from its old parent
+          const updatedItems = { ...prevItems };
+          Object.keys(updatedItems).forEach(key => {
+            if (updatedItems[key].children?.includes(movedNodeId)) {
+              updatedItems[key] = {
+                ...updatedItems[key],
+                children: updatedItems[key].children!.filter(id => id !== movedNodeId)
+              };
+            }
+          });
+          
+          // Add to new parent with sorting
+          const sortedChildren = [...newChildrenIds].sort((a, b) => {
+            const itemA = updatedItems[a]
+            const itemB = updatedItems[b]
+
+            // First sort folders before files
+            const isAFolder = (itemA?.children?.length ?? 0) > 0
+            const isBFolder = (itemB?.children?.length ?? 0) > 0
+
+            if (isAFolder && !isBFolder) return -1
+            if (!isAFolder && isBFolder) return 1
+
+            // Then sort alphabetically by name
+            return (itemA?.name ?? "").localeCompare(itemB?.name ?? "")
+          })
+
+          return {
+            ...updatedItems,
+            [parentItem.getId()]: {
+              ...updatedItems[parentItem.getId()],
+              children: sortedChildren,
+            },
+          }
+        })
+        
+        // Notify parent component to refresh the data
+        if (onNodeMoved) {
+          onNodeMoved();
+        }
+      } catch (error) {
+        console.error('Error moving node:', error);
+        // Optionally show an error toast or revert the change
+      } finally {
+        setIsMoving(false);
+      }
     }),
     dataLoader: {
       getItem: (itemId) => items[itemId],
@@ -189,7 +243,12 @@ export default function Component({ nodes = [], collectionName = 'Collection' }:
   })
 
   return (
-    <div className="flex flex-col">
+    <div className="flex flex-col relative">
+      {isMoving && (
+        <div className="absolute inset-0 bg-background/50 z-50 flex items-center justify-center">
+          <div className="text-sm text-muted-foreground">Moving...</div>
+        </div>
+      )}
       <Tree
         className="relative overflow-y-auto max-h-[calc(100vh-300px)] overflow-x-auto"
         indent={indent}
