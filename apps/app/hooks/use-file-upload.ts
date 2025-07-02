@@ -185,11 +185,17 @@ export const useFileUpload = (
         clearFiles()
       }
 
+      // Filter files by type first - only keep .md files, silently ignore others
+      const filteredFiles = newFilesArray.filter((file) => {
+        const fileName = file.name.toLowerCase()
+        return fileName.endsWith('.md')
+      })
+
       // Check if adding these files would exceed maxFiles (only in multiple mode)
       if (
         multiple &&
         maxFiles !== Infinity &&
-        state.files.length + newFilesArray.length > maxFiles
+        state.files.length + filteredFiles.length > maxFiles
       ) {
         errors.push(`You can only upload a maximum of ${maxFiles} files.`)
         setState((prev) => ({ ...prev, errors }))
@@ -198,7 +204,7 @@ export const useFileUpload = (
 
       const validFiles: FileWithPreview[] = []
 
-      newFilesArray.forEach((file) => {
+      filteredFiles.forEach((file) => {
         // Only check for duplicates if multiple files are allowed
         if (multiple) {
           const isDuplicate = state.files.some(
@@ -213,7 +219,7 @@ export const useFileUpload = (
           }
         }
 
-        // Check file size
+        // Check file size (still show errors for size violations)
         if (file.size > maxSize) {
           errors.push(
             multiple
@@ -223,23 +229,20 @@ export const useFileUpload = (
           return
         }
 
-        const error = validateFile(file)
-        if (error) {
-          errors.push(error)
-        } else {
-          const fileWithPreview: FileWithPreview = {
-            file,
-            id: generateUniqueId(file),
-            preview: createPreview(file),
-          }
-          
-          // Add path information if available (from folder uploads)
-          if ('webkitRelativePath' in file && file.webkitRelativePath) {
-            fileWithPreview.path = file.webkitRelativePath
-          }
-          
-          validFiles.push(fileWithPreview)
+        // Since we've already filtered by file type, we don't need validateFile for type checking
+        // Just create the file object directly
+        const fileWithPreview: FileWithPreview = {
+          file,
+          id: generateUniqueId(file),
+          preview: createPreview(file),
         }
+        
+        // Add path information if available (from folder uploads)
+        if ('webkitRelativePath' in file && file.webkitRelativePath) {
+          fileWithPreview.path = file.webkitRelativePath
+        }
+        
+        validFiles.push(fileWithPreview)
       })
 
       // Only update state if we have valid files to add

@@ -235,7 +235,7 @@ export default function FileUploadDialog() {
 
       {/* File list */}
       {files.length > 0 && (
-        <div className="space-y-2">
+        <div className={`space-y-2 ${files.length > 3 ? 'max-h-64 overflow-y-auto' : ''}`}>
           {files.map((file) => (
             <div
               key={file.id}
