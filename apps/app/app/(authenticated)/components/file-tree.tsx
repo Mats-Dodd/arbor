@@ -164,6 +164,12 @@ export default function Component({ nodes = [], collectionName = 'Collection', o
       
       if (!movedNodeId || movedNodeId === 'root') return;
       
+      // Prevent moving into the same parent (no-op)
+      const currentParent = Object.keys(items).find(key => 
+        items[key].children?.includes(movedNodeId)
+      );
+      if (currentParent === parentItem.getId()) return;
+      
       setIsMoving(true);
       
       try {
@@ -256,11 +262,6 @@ export default function Component({ nodes = [], collectionName = 'Collection', o
       >
         <AssistiveTreeDescription tree={tree} />
         {tree.getItems().map((item) => {
-          // Skip rendering the root item
-          if (item.getId() === "root") {
-            return null;
-          }
-          
           // Get the current node ID from the pathname
           const currentNodeId = pathname.startsWith('/node/') ? pathname.split('/node/')[1] : null
           const isActive = item.getId() === currentNodeId
@@ -268,23 +269,29 @@ export default function Component({ nodes = [], collectionName = 'Collection', o
           return (
             <TreeItem key={item.getId()} item={item} className="pb-0">
               <TreeItemLabel 
-                className={`rounded-md py-1.5 px-2 text-sm hover:bg-accent/50 ${
-                  !item.isFolder() ? 'cursor-pointer' : ''
+                className={`rounded-md py-1.5 px-2 text-sm ${
+                  item.getId() === 'root' 
+                    ? 'font-semibold text-muted-foreground hover:bg-accent/30' 
+                    : `hover:bg-accent/50 ${!item.isFolder() ? 'cursor-pointer' : ''}`
                 } ${isActive ? 'bg-accent' : ''}`}
                 onClick={() => {
-                  // Only navigate if it's a file (not a folder)
-                  if (!item.isFolder()) {
+                  // Only navigate if it's a file (not a folder or root)
+                  if (!item.isFolder() && item.getId() !== 'root') {
                     router.push(`/node/${item.getId()}`)
                   }
                 }}
               >
                 <span className="flex items-center gap-2 min-w-0">
                   {item.isFolder() ? (
-                    item.isExpanded() ? (
-                      <RiFolderOpenLine className="text-muted-foreground pointer-events-none size-4 flex-shrink-0" />
-                    ) : (
-                      <RiFolderLine className="text-muted-foreground pointer-events-none size-4 flex-shrink-0" />
-                    )
+                    <>
+                      {item.getId() !== 'root' && (
+                        item.isExpanded() ? (
+                          <RiFolderOpenLine className="text-muted-foreground pointer-events-none size-4 flex-shrink-0" />
+                        ) : (
+                          <RiFolderLine className="text-muted-foreground pointer-events-none size-4 flex-shrink-0" />
+                        )
+                      )}
+                    </>
                   ) : (
                     <>
                       <div className="w-4 flex-shrink-0" />
